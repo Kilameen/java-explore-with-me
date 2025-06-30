@@ -30,7 +30,7 @@ services:
 
   ewm-service:
     build:
-      context: ./ewm-main-service
+      context: ./ewm-main-svc
     image: ewm-service
     container_name: ewm-service
     environment:
