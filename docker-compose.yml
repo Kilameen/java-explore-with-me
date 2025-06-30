@@ -1,6 +1,8 @@
+version: "3.9"
 services:
-  stats-server:
-    build: stat-server
+  stat-server:
+    build:
+      context: /home/runner/work/java-explore-with-me/java-explore-with-me/stat-server
     image: stat-svc
     container_name: stat-svc
     ports:
@@ -8,7 +10,7 @@ services:
     depends_on:
       - stats-db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/statdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/statdb
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
 
