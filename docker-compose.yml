@@ -9,7 +9,7 @@ services:
     depends_on:
       - statdb
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/statdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
 
