@@ -8,37 +8,38 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.stat.base.BaseClient;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class StatisticsClient extends BaseClient {
 
-    private static final String API_PREFIX = "/";
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
     public StatisticsClient(@Value("${stat-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
-                        .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PREFIX))
+                        .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                         .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
                         .build()
         );
     }
 
-    // Отправка запроса на сохранение информации о просмотре endpoint
     public ResponseEntity<Object> createEndpointHit(EndpointHitCreateDto endpointHitCreateDto) {
         return post("/hit", endpointHitCreateDto);
     }
 
-    // Получение статистики просмотров
-    public ResponseEntity<Object> getStatistics(String start, String end, List<String> uris, Boolean unique) {
+    public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
-                "uris", uris,
+                "start", start.format(formatter),
+                "end", end.format(formatter),
+                "uris", String.join(",", uris),
                 "unique", unique
         );
-        return get("/stats", parameters);
+        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }
 }

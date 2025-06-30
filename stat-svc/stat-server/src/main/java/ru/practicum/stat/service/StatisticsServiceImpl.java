@@ -13,9 +13,7 @@ import ru.practicum.stat.mapper.ViewStatsMapper;
 import ru.practicum.stat.model.EndpointHit;
 import ru.practicum.stat.model.ViewStats;
 
-
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,17 +34,22 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ViewStatsDto> getStats(String start, String end, List<String> uris, Boolean unique) {
-        LocalDateTime startTime = LocalDateTime.parse(start);
-        LocalDateTime endTime = LocalDateTime.parse(end);
-
+    public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) { // Принимаем LocalDateTime
         List<ViewStats> viewStats;
-
         if (unique) {
-            viewStats = endpointHitRepository.findStatsUniqueIp(startTime, endTime, uris);
+            if (uris != null && !uris.isEmpty()) {
+                viewStats = endpointHitRepository.findStatsUniqueIp(start, end, uris);
+            } else {
+                viewStats = endpointHitRepository.findStatsUniqueIpAllUris(start, end);
+            }
         } else {
-            viewStats = endpointHitRepository.findStats(startTime, endTime, uris);
+            if (uris != null && !uris.isEmpty()) {
+                viewStats = endpointHitRepository.findStats(start, end, uris);
+            } else {
+                viewStats = endpointHitRepository.findStatsAllUris(start, end);
+            }
         }
+
         return viewStats.stream()
                 .map(ViewStatsMapper::toViewStatsDto)
                 .collect(Collectors.toList());
