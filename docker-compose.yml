@@ -7,21 +7,21 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      - stats-db
+      - statdb
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats-db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/statdb
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
 
-  stats-db:
+  statdb:
     image: postgres:16.1
-    container_name: stats-db
+    container_name: statdb
     ports:
       - "6541:5432"
     environment:
       - POSTGRES_PASSWORD=admin
       - POSTGRES_USER=admin
-      - POSTGRES_DB=stats-db
+      - POSTGRES_DB=statdb
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s

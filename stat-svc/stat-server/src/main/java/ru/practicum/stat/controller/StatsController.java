@@ -23,17 +23,17 @@ public class StatsController {
 
     @PostMapping("/hit")
     public EndpointHitDto create(@RequestBody @Valid EndpointHitCreateDto endpoint) {
-        log.info("POST запрос на создание нового  ");
+        log.info("POST запрос на создание нового EndpointHit ");
         return statisticsService.create(endpoint);
     }
 
     @GetMapping("/stats")
     public List<ViewStatsDto> getStats(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start, // Изменил String на LocalDateTime
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,   // Изменил String на LocalDateTime
-            @RequestParam(required = false) List<String> uris, // Указал тип List
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+            @RequestParam(required = false) List<String> uris,
             @RequestParam(defaultValue = "false") Boolean unique) {
-        log.info("GET запрос на получение ");
-        return statisticsService.getStats(start, end, uris, unique); // передаем LocalDateTime
+        log.info("GET запрос на получение статистики ");
+        return statisticsService.getStats(start, end, uris, unique);
     }
 }
