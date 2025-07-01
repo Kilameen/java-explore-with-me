@@ -3,6 +3,8 @@ package ru.practicum.stat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,5 +15,5 @@ public class EndpointHitDto {
     String app;
     String uri;
     String ip;
-    String timestamp;
+    LocalDateTime timestamp;
 }

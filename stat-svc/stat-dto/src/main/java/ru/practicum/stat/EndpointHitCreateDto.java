@@ -1,8 +1,13 @@
 package ru.practicum.stat;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -10,13 +15,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EndpointHitCreateDto {
-
-    @NotBlank(message = "Параметр app не должен быть пустым.")
     String app;
-    @NotBlank(message = "Параметр uri не должен быть пустым.")
     String uri;
-    @NotBlank(message = "Параметр ip не должен быть пустым.")
     String ip;
-    @NotBlank(message = "Параметр timestamp не должен быть пустым.")
-    String timestamp;
+    LocalDateTime timestamp;
 }

@@ -1,5 +1,6 @@
 package ru.practicum.stat.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +23,9 @@ public class StatsController {
     private final StatisticsService statisticsService;
 
     @PostMapping("/hit")
-    public EndpointHitDto create(@RequestBody @Valid EndpointHitCreateDto endpoint) {
+    public EndpointHitDto create(HttpServletRequest request) {
         log.info("POST запрос на создание нового EndpointHit ");
+        EndpointHitCreateDto endpoint = new EndpointHitCreateDto(request);
         return statisticsService.create(endpoint);
     }
 

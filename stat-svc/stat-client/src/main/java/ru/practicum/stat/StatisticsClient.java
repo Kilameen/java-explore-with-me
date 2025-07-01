@@ -1,5 +1,6 @@
 package ru.practicum.stat;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -29,10 +30,18 @@ public class StatisticsClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> createEndpointHit(EndpointHitCreateDto endpointHitCreateDto) {
+    // Отправляем запрос на сохранение информации о хите
+    public ResponseEntity<Object> create(HttpServletRequest request) {
+        EndpointHitCreateDto endpointHitCreateDto = EndpointHitCreateDto.builder()
+                .app(request.getHeader("app")) // Получаем app из заголовка запроса
+                .uri(request.getRequestURI()) // Получаем URI из запроса
+                .ip(request.getRemoteAddr()) // Получаем IP-адрес из запроса
+                .timestamp(LocalDateTime.now()) // Устанавливаем текущее время
+                .build();
         return post("/hit", endpointHitCreateDto);
     }
 
+    // Получаем статистику
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         Map<String, Object> parameters = Map.of(
                 "start", start.format(formatter),

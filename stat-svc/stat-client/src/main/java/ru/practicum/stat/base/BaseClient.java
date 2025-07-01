@@ -18,17 +18,11 @@ public class BaseClient {
     }
 
     protected ResponseEntity<Object> get(String path, Map<String, Object> parameters) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromPath(path);
-        if (parameters != null) {
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                builder.queryParam(entry.getKey(), entry.getValue());
-            }
-        }
         return makeAndSendRequest(HttpMethod.GET, path, parameters, null);
     }
 
     protected ResponseEntity<Object> post(String path, Object body) {
-        return makeAndSendRequest(HttpMethod.POST, "/hit", null, body);
+        return makeAndSendRequest(HttpMethod.POST, path, null, body);
     }
 
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path,
@@ -38,7 +32,9 @@ public class BaseClient {
         ResponseEntity<Object> responseEntity;
         try {
             if (parameters != null) {
-                responseEntity = rest.exchange(path, method, requestEntity, Object.class, parameters);
+                UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromPath(path);
+                parameters.forEach(uriBuilder::queryParam);
+                responseEntity = rest.exchange(uriBuilder.toUriString(), method, requestEntity, Object.class);
             } else {
                 responseEntity = rest.exchange(path, method, requestEntity, Object.class);
             }
