@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.stat.EndpointHitRepository;
 import ru.practicum.stat.EndpointHitCreateDto;
 import ru.practicum.stat.EndpointHitDto;
-import ru.practicum.stat.EndpointHitRepository;
 import ru.practicum.stat.ViewStatsDto;
 import ru.practicum.stat.mapper.EndpointHitMapper;
 import ru.practicum.stat.mapper.ViewStatsMapper;
@@ -26,15 +26,18 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final EndpointHitRepository endpointHitRepository;
 
     @Override
-    public EndpointHitDto create(EndpointHitCreateDto endpoint) {
-        EndpointHit hit = EndpointHitMapper.toEndpointHitFromCreateDto(endpoint);
-        EndpointHit createHit = endpointHitRepository.save(hit);
-        return EndpointHitMapper.toEndpointHitDto(createHit);
+    public EndpointHitDto create(EndpointHitCreateDto endpointHitCreateDto) {
+        log.info("Создание EndpointHit с данными: {}", endpointHitCreateDto);
+        EndpointHit hit = EndpointHitMapper.toEndpointHitFromCreateDto(endpointHitCreateDto);
+        EndpointHit createdHit = endpointHitRepository.save(hit);
+        return EndpointHitMapper.toEndpointHitDto(createdHit);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) { // Принимаем LocalDateTime
+    public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        log.info("Получение статистики с start={}, end={}, uris={}, unique={}", start, end, uris, unique);
+
         List<ViewStats> viewStats;
         if (unique) {
             if (uris != null && !uris.isEmpty()) {
@@ -49,9 +52,10 @@ public class StatisticsServiceImpl implements StatisticsService {
                 viewStats = endpointHitRepository.findStatsAllUris(start, end);
             }
         }
+        log.info("Получена статистика: {}", viewStats);
 
-        return viewStats.stream()
+        return viewStats != null ? viewStats.stream()
                 .map(ViewStatsMapper::toViewStatsDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()) : List.of();
     }
 }

@@ -4,9 +4,6 @@ import ru.practicum.stat.EndpointHitCreateDto;
 import ru.practicum.stat.EndpointHitDto;
 import ru.practicum.stat.model.EndpointHit;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 public class EndpointHitMapper {
 
     public static EndpointHit toEndpointHitFromCreateDto(EndpointHitCreateDto dto) {
@@ -14,7 +11,7 @@ public class EndpointHitMapper {
                 .app(dto.getApp())
                 .uri(dto.getUri())
                 .ip(dto.getIp())
-                .timestamp(LocalDateTime.now())
+                .timestamp(dto.getTimestamp())
                 .build();
     }
 

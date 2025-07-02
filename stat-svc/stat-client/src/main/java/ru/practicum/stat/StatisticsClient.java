@@ -8,47 +8,53 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.stat.base.BaseClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class StatisticsClient extends BaseClient {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private final String appName;
+
     @Autowired
-    public StatisticsClient(@Value("${stat-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public StatisticsClient(@Value("${stat-server.url}") String serverUrl,
+                            @Value("${app.name}") String appName,
+                            RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                         .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
                         .build()
         );
+        this.appName = appName;
     }
 
-    // Отправляем запрос на сохранение информации о хите
     public ResponseEntity<Object> create(HttpServletRequest request) {
         EndpointHitCreateDto endpointHitCreateDto = EndpointHitCreateDto.builder()
-                .app(request.getHeader("app")) // Получаем app из заголовка запроса
-                .uri(request.getRequestURI()) // Получаем URI из запроса
-                .ip(request.getRemoteAddr()) // Получаем IP-адрес из запроса
-                .timestamp(LocalDateTime.now()) // Устанавливаем текущее время
+                .app(appName)
+                .uri(request.getRequestURI())
+                .ip(request.getRemoteAddr())
+                .timestamp(LocalDateTime.now())
                 .build();
-        return post("/hit", endpointHitCreateDto);
+        return post(endpointHitCreateDto);
     }
 
-    // Получаем статистику
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        Map<String, Object> parameters = Map.of(
-                "start", start.format(formatter),
-                "end", end.format(formatter),
-                "uris", String.join(",", uris),
-                "unique", unique
-        );
-        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/stats")
+                .queryParam("start", start.format(formatter))
+                .queryParam("end", end.format(formatter))
+                .queryParam("unique", unique);
+
+        if (uris != null && !uris.isEmpty()) {
+            builder.queryParam("uris", String.join(",", uris));
+        }
+        String url = builder.toUriString();
+        return get(url);
     }
 }
