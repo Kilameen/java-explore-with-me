@@ -1,6 +1,5 @@
 package ru.practicum.ewm.user.service;
 
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.user.dto.NewUserRequest;
 import ru.practicum.ewm.user.dto.UserDto;
 

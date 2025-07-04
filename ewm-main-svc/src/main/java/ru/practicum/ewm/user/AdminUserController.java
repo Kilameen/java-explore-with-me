@@ -18,18 +18,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminUserController {
 
-    private final UserService userService;
+    private final UserService service;
 
     @PostMapping
     public UserDto create(@RequestBody @Valid NewUserRequest newUserRequest) {
         log.info("POST запрос на создание пользователя: {}", newUserRequest);
-        return userService.create(newUserRequest);
+        return service.create(newUserRequest);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         log.info("DELETE запрос на удаление пользователя с id: {}", id);
-        userService.delete(id);
+        service.delete(id);
     }
 
     @GetMapping
@@ -37,6 +37,6 @@ public class AdminUserController {
                                      @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                      @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("GET запрос на получение списка пользователей");
-        return userService.getAllUsers(ids, from, size);
+        return service.getAllUsers(ids, from, size);
     }
 }

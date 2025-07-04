@@ -12,12 +12,12 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Builder
 public class NewUserRequest {
-    @NotBlank(message = "Поле name не может быть пустым, заполните поле name от 2 до 36 символов!")
-    @Size(min = 2, max = 36, message = "Длина name должна составлять от 2 до 36 символов!")
+    @NotBlank(message = "Поле name не может быть пустым, заполните поле name от 2 до 250 символов!")
+    @Size(min = 2, max = 250, message = "Длина name должна составлять от 2 до 250 символов!")
     String name;
 
     @NotBlank(message = "Поле email не может быть пустым!")
-    @Size(min = 6, max = 320, message = "Длина email должна составлять от 6 до 320 символов!")
+    @Size(min = 6, max = 254, message = "Длина email должна составлять от 6 до 254 символов!")
     @Email(message = "Email должен быть в подходящем формате!")
     String email;
 }

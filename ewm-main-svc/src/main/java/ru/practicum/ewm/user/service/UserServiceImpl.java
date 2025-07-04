@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
     public UserDto create(NewUserRequest newUserRequest) {
@@ -31,9 +32,9 @@ public class UserServiceImpl implements UserService {
             throw new DuplicatedDataException("Email уже зарегистрирован: " + newUserRequest.getEmail());
         }
         log.info("Создание пользователя с данными: {}", newUserRequest);
-        User user = UserMapper.toNewUserFromRequest(newUserRequest);
-        User createUser = userRepository.save(user);
-        return UserMapper.toUserDto(createUser);
+        User user = userMapper.toNewUserFromRequest(newUserRequest);
+        User createdUser = userRepository.save(user);
+        return userMapper.toUserDto(createdUser);
     }
 
     @Override
@@ -47,7 +48,7 @@ public class UserServiceImpl implements UserService {
         int page = from > 0 ? from / size : 0;
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").descending());
         return (ids != null) ? userRepository.findByIdIn(ids, pageable)
-                .stream().map(UserMapper::toUserDto).collect(Collectors.toList()) : userRepository.findAll(pageable)
-                .stream().map(UserMapper::toUserDto).collect(Collectors.toList());
+                .stream().map(userMapper::toUserDto).collect(Collectors.toList()) : userRepository.findAll(pageable)
+                .stream().map(userMapper::toUserDto).collect(Collectors.toList());
     }
 }
