@@ -47,7 +47,9 @@ public class Event {
     LocalDateTime eventDate;
 
     Boolean paid;
+    @Column(name = "participant_limit")
     Integer participantLimit;
+    @Column(name = "request_moderation")
     Boolean requestModeration;
 
     @Enumerated(EnumType.STRING)

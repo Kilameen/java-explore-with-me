@@ -18,6 +18,9 @@ public interface EventService {
 
     Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size);
 
+    @Transactional(readOnly = true)
+    Collection<EventFullDto> findAllByAdmin(List<Long> users, List<String> states, List<Long> categories, String rangeStart, String rangeEnd, Integer from, Integer size);
+
     EventFullDto findEventById(Long eventId, HttpServletRequest request);
 
     void updateEventConfirmedRequests(Long eventId, int confirmedRequests);

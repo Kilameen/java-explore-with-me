@@ -39,7 +39,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -58,7 +57,6 @@ public class EventServiceImpl implements EventService {
     LocationRepository locationRepository;
     UserRepository userRepository;
     StatisticsClient statClient;
-    // RequestRepository requestRepository; //  Добавлен репозиторий запросов
 
     EventMapper eventMapper;
     CategoryMapper categoryMapper;
@@ -271,26 +269,32 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Collection<EventFullDto> findAllByAdmin(List<Long> users, List<String> states, List<Long> categories, String rangeStart, String rangeEnd, Integer from, Integer size) {
         LocalDateTime start = (rangeStart == null) ? null : LocalDateTime.parse(rangeStart, formatter);
         LocalDateTime end = (rangeEnd == null) ? null : LocalDateTime.parse(rangeEnd, formatter);
+
         Pageable pageable = PageRequest.of(from, size);
 
-        // Получаем события из репозитория
         Collection<Event> events = eventRepository.findAllByAdmin(users, states, categories, start, end, pageable);
-
-        // Преобразуем события в DTO
         return events.stream()
                 .map(event -> {
-                    // Маппим данные и считаем просмотры
                     CategoryDto categoryDto = categoryMapper.toCategoryDto(event.getCategory());
                     LocationDto locationDto = locationMapper.toLocationDto(event.getLocation());
                     UserShortDto userShortDto = userMapper.toUserShortDto(event.getInitiator());
+
                     long views = getViews(event.getId(), event.getCreatedOn());
-                    return eventMapper.toEventFullDto(event, categoryDto, locationDto, userShortDto, views);
+
+                    EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
+                    eventFullDto.setCategory(categoryDto);
+                    eventFullDto.setLocation(locationDto);
+                    eventFullDto.setInitiator(userShortDto);
+                    eventFullDto.setViews((int) views);
+
+                    return eventFullDto;
                 })
-                .collect(Collectors.toCollection(ArrayList::new));
+                .collect(Collectors.toList());
     }
 
 @Transactional(readOnly = true)

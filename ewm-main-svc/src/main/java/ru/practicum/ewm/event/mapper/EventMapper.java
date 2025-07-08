@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event.mapper;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
@@ -10,6 +11,7 @@ import ru.practicum.ewm.location.mapper.LocationMapper;
 import ru.practicum.ewm.user.mapper.UserMapper;
 
 @RequiredArgsConstructor
+@Component
 public class EventMapper {
 
     private final LocationMapper locationMapper;

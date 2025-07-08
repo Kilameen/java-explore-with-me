@@ -1,8 +1,10 @@
 package ru.practicum.ewm.location.mapper;
 
+import org.springframework.stereotype.Component;
 import ru.practicum.ewm.location.dto.LocationDto;
 import ru.practicum.ewm.location.model.Location;
 
+@Component
 public class LocationMapper {
 
     public Location toLocationFromDto(LocationDto locationDto){

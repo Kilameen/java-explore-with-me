@@ -34,22 +34,22 @@ services:
     image: ewm-service
     container_name: ewm-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm-db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewmdb:5432/ewmdb
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin
     ports:
       - "8080:8080"
     depends_on:
       - stat-server
-      - ewm-db
+      - ewmdb
 
-  ewm-db:
+  ewmdb:
     image: postgres:16.1
-    container_name: ewm-db
+    container_name: ewmdb
     ports:
       - "6542:5432"
     environment:
-      - POSTGRES_DB=ewm-db
+      - POSTGRES_DB=ewmdb
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     healthcheck:
