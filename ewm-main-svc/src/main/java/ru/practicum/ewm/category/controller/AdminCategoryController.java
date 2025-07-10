@@ -3,6 +3,7 @@ package ru.practicum.ewm.category.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.NewCategoryDto;
@@ -17,6 +18,7 @@ public class AdminCategoryController {
 
     private final CategoryService service;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public CategoryDto create(@RequestBody @Valid NewCategoryDto newCategoryDto) {
         log.info("POST запрос на создание категории: {}", newCategoryDto);
@@ -30,6 +32,7 @@ public class AdminCategoryController {
         return service.update(catId, updateCategoryDto);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{catId}")
     public void delete(@PathVariable Long catId) {
         log.info("DELETE запрос на удаление категории с id: {}", catId);

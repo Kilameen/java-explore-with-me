@@ -2,6 +2,7 @@ package ru.practicum.ewm.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -26,9 +27,10 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(DuplicatedDataException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.CONFLICT) // Устанавливаем код ответа 409 Conflict
     public ErrorResponse handleDuplicatedDataException(DuplicatedDataException ex) {
-        return new ErrorResponse("CONFLICT", ex.getMessage());
+        log.warn("DuplicatedDataException: {}", ex.getMessage()); // Логируем исключение
+        return new ErrorResponse("CONFLICT", ex.getMessage()); // Возвращаем тело ответа с информацией об ошибке
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -42,6 +44,13 @@ public class ErrorHandler {
     public ErrorResponse handleIllegalStateException(IllegalStateException ex) {
         return new ErrorResponse("BAD_REQUEST", ex.getMessage());
     }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        log.warn("DataIntegrityViolationException: {}", ex.getMessage());
+        return new ErrorResponse("CONFLICT", "Нарушение уникальности данных: " + ex.getMessage());
+    }
+
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)

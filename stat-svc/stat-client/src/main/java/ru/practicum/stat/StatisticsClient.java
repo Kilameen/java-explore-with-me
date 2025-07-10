@@ -47,14 +47,16 @@ public class StatisticsClient extends BaseClient {
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/stats")
-                .queryParam("start", start.format(formatter))
-                .queryParam("end", end.format(formatter))
+                .queryParam("start", start.format(formatter)) // Форматируем дату
+                .queryParam("end", end.format(formatter))   // Форматируем дату
                 .queryParam("unique", unique);
 
         if (uris != null && !uris.isEmpty()) {
             builder.queryParam("uris", String.join(",", uris));
         }
-        String url = builder.toUriString();
+        // Получаем URL без двойного кодирования
+        String url = builder.build().toUriString();
+
         return get(url);
     }
 }

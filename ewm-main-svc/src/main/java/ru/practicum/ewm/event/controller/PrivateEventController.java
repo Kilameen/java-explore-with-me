@@ -6,12 +6,17 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.event.service.EventService;
+import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
+import ru.practicum.ewm.request.dto.ParticipationRequestDto;
+import ru.practicum.ewm.request.service.EventRequestService;
 
 import java.util.Collection;
 
@@ -23,6 +28,7 @@ public class PrivateEventController {
 
     private final EventService eventService;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public EventFullDto create(@PathVariable Long userId, @RequestBody @Valid NewEventDto eventDto) {
         log.info("Пришел POST запрос /users/{}/events с телом {}", userId, eventDto);
@@ -57,6 +63,22 @@ public class PrivateEventController {
         final Collection<EventShortDto> events = eventService.findAllByPrivate(userId, from, size);
         log.info("Отправлен ответ GET /users/{}/events?from={}&size={} с телом: {}", userId, from, size, events);
         return events;
+    }
+
+    @GetMapping("/{eventId}/requests")
+    public Collection<ParticipationRequestDto> getByEventId(@PathVariable Long userId, @PathVariable Long eventId) {
+        log.info("Пришел GET запрос /users/{}/events/{}/requests", userId, eventId);
+        final Collection<ParticipationRequestDto> requests = eventService.getByEventId(userId, eventId);
+        log.info("Отправлен ответ GET /users/{}/events/{}/requests с телом: {}", userId, eventId, requests);
+        return requests;
+    }
+
+    @PatchMapping("/{eventId}/requests")
+    public EventRequestStatusUpdateResult updateStatus(@PathVariable Long userId, @PathVariable Long eventId, @RequestBody EventRequestStatusUpdateRequest requestsToUpdate) {
+        log.info("Пришел PATCH запрос /users/{}/events/{}/requests с телом {}", userId, eventId, requestsToUpdate);
+        final EventRequestStatusUpdateResult result = eventService.updateStatus(userId, eventId, requestsToUpdate);
+        log.info("Отправлен ответ PATCH /users/{}/events/{}/requests с телом: {}", userId, eventId, result);
+        return result;
     }
 
 }

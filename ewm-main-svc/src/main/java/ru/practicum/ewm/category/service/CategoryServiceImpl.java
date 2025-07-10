@@ -2,9 +2,9 @@ package ru.practicum.ewm.category.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.category.CategoryRepository;
@@ -76,7 +76,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public List<CategoryDto> getAllCategories(int from, int size) {
         int page = from > 0 ? from / size : 0;
-        Pageable pageable = PageRequest.of(page, size, Sort.by("name").descending());
+        Pageable pageable = PageRequest.of(page, size);
         return categoryRepository.findAll(pageable)
                 .stream().map(categoryMapper::toCategoryDto).collect(Collectors.toList());
     }

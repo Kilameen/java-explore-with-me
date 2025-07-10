@@ -3,6 +3,7 @@ package ru.practicum.ewm.compilation.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
@@ -17,6 +18,7 @@ public class CompilationAdminController {
 
     private final CompilationService compilationService;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public CompilationDto create(@Valid @RequestBody NewCompilationDto newCompilationDto) {
         log.info("Запрос на добавление подборки событий - ADMIN");
@@ -30,6 +32,7 @@ public class CompilationAdminController {
         return compilationService.update(compId, updateCompilation);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         log.info("Запрос на удаление подборки событий - ADMIN");

@@ -15,4 +15,14 @@ public class EventRequestMapper {
                 .created(request.getCreated())
                 .build();
     }
+
+    public  ParticipationRequestDto toParticipationRequestDto(EventRequest request) {
+              return ParticipationRequestDto.builder()
+                .id(request.getId())
+                .event(request.getEventId())
+                .requester(request.getRequesterId())
+                .status(request.getStatus())
+                .created(request.getCreated())
+                .build();
+    }
 }

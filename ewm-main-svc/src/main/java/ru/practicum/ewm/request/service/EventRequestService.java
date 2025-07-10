@@ -8,8 +8,8 @@ import java.util.List;
 public interface EventRequestService {
     ParticipationRequestDto create(Long userId, Long eventId);
 
-    @Transactional(readOnly = true)
     List<ParticipationRequestDto> getRequestsByUserId(Long userId);
 
     ParticipationRequestDto cancelRequest(Long userId, Long requestId);
+
 }

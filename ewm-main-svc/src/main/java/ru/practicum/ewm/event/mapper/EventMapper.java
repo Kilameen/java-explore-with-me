@@ -2,12 +2,12 @@ package ru.practicum.ewm.event.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.location.mapper.LocationMapper;
+import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.user.mapper.UserMapper;
 
 @RequiredArgsConstructor
@@ -18,6 +18,7 @@ public class EventMapper {
     private final CategoryMapper categoryMapper;
     private final UserMapper userMapper;
 
+    // Преобразует NewEventDto в Event
     public Event toEvent(NewEventDto newEventDto) {
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
@@ -31,6 +32,7 @@ public class EventMapper {
                 .build();
     }
 
+    // Преобразует Event в EventFullDto
     public EventFullDto toEventFullDto(Event event) {
         return EventFullDto.builder()
                 .id(event.getId())
@@ -47,9 +49,12 @@ public class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState())
                 .title(event.getTitle())
+                .views(event.getViews())
+                .confirmedRequests(event.getConfirmedRequests())
                 .build();
     }
 
+    // Преобразует Event в EventShortDto
     public EventShortDto toEventShortDto(Event event) {
         return EventShortDto.builder()
                 .id(event.getId())
@@ -59,6 +64,8 @@ public class EventMapper {
                 .initiator(userMapper.toUserShortDto(event.getInitiator()))
                 .paid(event.getPaid())
                 .title(event.getTitle())
+                .views(event.getViews())
+                .confirmedRequests(event.getConfirmedRequests())
                 .build();
     }
 }

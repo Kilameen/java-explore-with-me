@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.ewm.event.model.Event;
+import ru.practicum.ewm.utils.enums.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +21,7 @@ public interface EventRepository extends JpaRepository<Event,Long> {
         """)
     List<Event> findAllByAdmin(
             List<Long> users,
-            List<String> states,
+            List<EventState> states,
             List<Long> categories,
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
@@ -50,4 +51,5 @@ public interface EventRepository extends JpaRepository<Event,Long> {
     );
     List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
     List<Event> findAllByIdIn(List<Long> eventIds);
+
 }

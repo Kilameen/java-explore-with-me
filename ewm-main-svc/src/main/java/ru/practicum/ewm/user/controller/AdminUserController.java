@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.user.dto.NewUserRequest;
 import ru.practicum.ewm.user.dto.UserDto;
@@ -20,14 +21,15 @@ public class AdminUserController {
 
     private final UserService service;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public UserDto create(@RequestBody @Valid NewUserRequest newUserRequest) {
         log.info("POST запрос на создание пользователя: {}", newUserRequest);
         return service.create(newUserRequest);
     }
-
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
+    public void delete(@PathVariable Long id) {
         log.info("DELETE запрос на удаление пользователя с id: {}", id);
         service.delete(id);
     }

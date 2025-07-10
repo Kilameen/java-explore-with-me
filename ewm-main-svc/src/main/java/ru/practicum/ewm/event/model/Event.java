@@ -63,6 +63,6 @@ public class Event {
 
     @Column(name = "confirmed_requests")
     int confirmedRequests;
-    int views;
+    long views;
 }
 
