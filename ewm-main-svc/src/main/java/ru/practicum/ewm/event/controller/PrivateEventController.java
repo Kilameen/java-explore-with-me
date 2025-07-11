@@ -45,12 +45,10 @@ public class PrivateEventController {
         return event;
     }
 
+
     @GetMapping("/{eventId}")
-    public EventFullDto findEventById(@PathVariable Long eventId, HttpServletRequest request) {
-        log.info("Пришел GET запрос /events/{}", eventId);
-        final EventFullDto event = eventService.findEventById(eventId, request);
-        log.info("Отправлен ответ GET /events/{} с телом: {}", eventId, event);
-        return event;
+    public EventFullDto getEventOfUser(@PathVariable Long userId, @PathVariable Long eventId) {
+        return eventService.getEventOfUser(userId, eventId);
     }
 
     @GetMapping

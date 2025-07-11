@@ -35,7 +35,7 @@ public class AdminEventController {
     ) {
         log.info("Пришел GET запрос /admin/events с параметрами: users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
-        final Collection<EventFullDto> events = eventService.findAllByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+        Collection<EventFullDto> events = eventService.findAllByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
         log.info("Отправлен ответ GET /admin/events с телом: {}", events);
         return events;
     }
@@ -43,7 +43,7 @@ public class AdminEventController {
     @PatchMapping("/{eventId}")
     public EventFullDto update(@PathVariable Long eventId, @RequestBody @Valid UpdateEventAdminRequest eventDto) {
         log.info("Пришел PATCH запрос /admin/events/{} с телом {}", eventId, eventDto);
-        final EventFullDto event = eventService.updateEventByAdmin(eventId, eventDto);
+        EventFullDto event = eventService.updateEventByAdmin(eventId, eventDto);
         log.info("Отправлен ответ PATCH /admin/events/{} с телом: {}", eventId, event);
         return event;
     }

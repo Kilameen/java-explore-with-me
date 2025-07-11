@@ -19,13 +19,15 @@ public interface EventService {
 
     EventFullDto updateEventByPrivate(Long userId, Long eventId, UpdateEventUserRequest eventUserRequest);
 
+    EventFullDto getEventOfUser(Long userId, Long eventId);
+
     Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request);
 
     Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size);
 
     Collection<EventFullDto> findAllByAdmin(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
 
-      EventFullDto findEventById(Long eventId, HttpServletRequest request);
+EventFullDto findEventById(Long eventId, HttpServletRequest request);
 
     List<ParticipationRequestDto> getByEventId(Long eventInitiatorId, Long eventId);
 

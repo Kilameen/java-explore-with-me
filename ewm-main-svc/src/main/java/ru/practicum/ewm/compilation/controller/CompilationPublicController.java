@@ -1,5 +1,7 @@
 package ru.practicum.ewm.compilation.controller;
 
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +20,8 @@ public class CompilationPublicController {
     @GetMapping
     public List<CompilationDto> getAllCompilations(
             @RequestParam(required = false) Boolean pinned,
-            @RequestParam(defaultValue = "0") Integer from,
-            @RequestParam(defaultValue = "10") Integer size) {
+            @RequestParam(defaultValue = "0")@PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10")@Positive Integer size) {
         log.info("Запрос на получение подборки всех событий");
         return compilationService.getAllCompilations(from, size, pinned);
     }

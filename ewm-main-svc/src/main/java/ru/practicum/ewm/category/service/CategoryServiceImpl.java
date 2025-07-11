@@ -13,6 +13,8 @@ import ru.practicum.ewm.category.dto.NewCategoryDto;
 import ru.practicum.ewm.category.dto.UpdateCategoryDto;
 import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.category.model.Category;
+import ru.practicum.ewm.event.EventRepository;
+import ru.practicum.ewm.exception.ConflictException;
 import ru.practicum.ewm.exception.DuplicatedDataException;
 import ru.practicum.ewm.exception.NotFoundException;
 
@@ -27,6 +29,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final EventRepository eventRepository;
 
     @Override
     public CategoryDto create(NewCategoryDto newCategoryDto) {
@@ -42,8 +45,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void delete(Long id) {
+        if (eventRepository.existsByCategoryId(id)) {
+            throw new ConflictException("Невозможно удалить категорию, так как с ней связаны события.");
+        }
         categoryRepository.deleteById(id);
     }
+
 
     @Override
     public CategoryDto update(Long catId, UpdateCategoryDto updateCategoryDto) {

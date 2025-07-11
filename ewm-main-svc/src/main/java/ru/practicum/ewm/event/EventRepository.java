@@ -30,16 +30,15 @@ public interface EventRepository extends JpaRepository<Event,Long> {
 
 
     @Query("""
-            SELECT e
-            FROM Event AS e
-            WHERE e.state = PUBLISHED
-                AND (?1 IS NULL or e.annotation ILIKE %?1% or e.description ILIKE %?1%)
-                AND (?2 IS NULL or e.category.id in ?2)
-                AND (?3 IS NULL or e.paid = ?3)
-                AND (CAST(?4 AS timestamp) IS NULL and e.eventDate >= CURRENT_TIMESTAMP or e.eventDate >= ?4)
-                AND (CAST(?5 AS timestamp) IS NULL or e.eventDate < ?5)
-                AND (?6 = false or e.participantLimit = 0 or e.participantLimit < e.confirmedRequests)
-        """)
+    SELECT e
+    FROM Event e
+    WHERE e.state = 'PUBLISHED'
+    AND (?1 IS NULL OR lower(e.annotation) LIKE lower(concat('%', ?1, '%')) OR lower(e.description) LIKE lower(concat('%', ?1, '%')))
+    AND (?2 IS NULL OR e.category.id IN ?2)
+    AND (?3 IS NULL OR e.paid = ?3)
+    AND ((?4 IS NULL AND ?5 IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR (e.eventDate BETWEEN ?4 AND ?5))
+    AND (?6 = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
+""")
     List<Event> findAllByPublic(
             String text,
             List<Long> categories,
@@ -49,7 +48,8 @@ public interface EventRepository extends JpaRepository<Event,Long> {
             Boolean onlyAvailable,
             Pageable pageable
     );
+
     List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
     List<Event> findAllByIdIn(List<Long> eventIds);
-
+    boolean existsByCategoryId(Long id);
 }
