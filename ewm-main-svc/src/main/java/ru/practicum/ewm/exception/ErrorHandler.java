@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
@@ -44,6 +45,7 @@ public class ErrorHandler {
     public ErrorResponse handleIllegalStateException(IllegalStateException ex) {
         return new ErrorResponse("BAD_REQUEST", ex.getMessage());
     }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
