@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.location.model.Location;
 import ru.practicum.ewm.user.model.User;
-import ru.practicum.ewm.utils.enums.EventState;
+import ru.practicum.ewm.enums.EventState;
 
 import java.time.LocalDateTime;
 
@@ -63,6 +63,5 @@ public class Event {
     long views;
 
     @Column(name = "confirmed_requests")
-    int confirmedRequests;
+    long confirmedRequests;
 }
-

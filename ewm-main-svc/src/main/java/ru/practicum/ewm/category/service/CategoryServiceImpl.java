@@ -1,8 +1,9 @@
 package ru.practicum.ewm.category.service;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,11 +26,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryServiceImpl implements CategoryService {
 
-    private final CategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;
-    private final EventRepository eventRepository;
+    CategoryRepository categoryRepository;
+    CategoryMapper categoryMapper;
+    EventRepository eventRepository;
 
     @Override
     public CategoryDto create(NewCategoryDto newCategoryDto) {
@@ -50,7 +52,6 @@ public class CategoryServiceImpl implements CategoryService {
         }
         categoryRepository.deleteById(id);
     }
-
 
     @Override
     public CategoryDto update(Long catId, UpdateCategoryDto updateCategoryDto) {

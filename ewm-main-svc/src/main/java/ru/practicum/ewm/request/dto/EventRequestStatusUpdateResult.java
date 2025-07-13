@@ -3,8 +3,7 @@ package ru.practicum.ewm.request.dto;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -12,6 +11,6 @@ import java.util.Collection;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventRequestStatusUpdateResult {
-    Collection<ParticipationRequestDto> confirmedRequests = new ArrayList<>();
-    Collection<ParticipationRequestDto> rejectedRequests = new ArrayList<>();
+    List<ParticipationRequestDto> confirmedRequests;
+    List<ParticipationRequestDto> rejectedRequests;
 }

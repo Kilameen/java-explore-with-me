@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.location.model.Location;
-import ru.practicum.ewm.utils.enums.StateAction;
+import ru.practicum.ewm.enums.StateAction;
 
 import java.time.LocalDateTime;
 

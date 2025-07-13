@@ -38,5 +38,4 @@ public class AdminCategoryController {
         log.info("DELETE запрос на удаление категории с id: {}", catId);
         service.delete(catId);
     }
-
 }

@@ -1,6 +1,5 @@
 package ru.practicum.ewm.event.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -13,10 +12,6 @@ import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.event.service.EventService;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
-import ru.practicum.ewm.request.dto.ParticipationRequestDto;
-import ru.practicum.ewm.request.service.EventRequestService;
 
 import java.util.Collection;
 
@@ -31,23 +26,23 @@ public class PrivateEventController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public EventFullDto create(@PathVariable Long userId, @RequestBody @Valid NewEventDto eventDto) {
-        log.info("Пришел POST запрос /users/{}/events с телом {}", userId, eventDto);
-        final EventFullDto event = eventService.create(userId, eventDto);
+        log.info("POST запрос /users/{}/events с телом {}", userId, eventDto);
+        EventFullDto event = eventService.create(userId, eventDto);
         log.info("Отправлен ответ POST /users/{}/events с телом: {}", userId, event);
         return event;
     }
 
     @PatchMapping("/{eventId}")
     public EventFullDto update(@PathVariable Long userId, @PathVariable Long eventId, @RequestBody @Valid UpdateEventUserRequest eventDto) {
-        log.info("Пришел PATCH запрос /users/{}/events/{} с телом {}", userId, eventId, eventDto);
-        final EventFullDto event = eventService.updateEventByPrivate(userId, eventId, eventDto);
+        log.info("PATCH запрос /users/{}/events/{} с телом {}", userId, eventId, eventDto);
+        EventFullDto event = eventService.updateEventByPrivate(userId, eventId, eventDto);
         log.info("Отправлен ответ PATCH /users/{}/events/{} с телом: {}", userId, eventId, event);
         return event;
     }
 
-
     @GetMapping("/{eventId}")
     public EventFullDto getEventOfUser(@PathVariable Long userId, @PathVariable Long eventId) {
+        log.info("GET запрос на получение списка всех событий пользователя с id: {}", userId);
         return eventService.getEventOfUser(userId, eventId);
     }
 
@@ -57,26 +52,9 @@ public class PrivateEventController {
             @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(required = false, defaultValue = "10") @Positive Integer size
     ) {
-        log.info("Пришел GET запрос /users/{}/events?from={}&size={}", userId, from, size);
-        final Collection<EventShortDto> events = eventService.findAllByPrivate(userId, from, size);
+        log.info("GET запрос /users/{}/events?from={}&size={}", userId, from, size);
+        Collection<EventShortDto> events = eventService.findAllByPrivate(userId, from, size);
         log.info("Отправлен ответ GET /users/{}/events?from={}&size={} с телом: {}", userId, from, size, events);
         return events;
     }
-
-    @GetMapping("/{eventId}/requests")
-    public Collection<ParticipationRequestDto> getByEventId(@PathVariable Long userId, @PathVariable Long eventId) {
-        log.info("Пришел GET запрос /users/{}/events/{}/requests", userId, eventId);
-        final Collection<ParticipationRequestDto> requests = eventService.getByEventId(userId, eventId);
-        log.info("Отправлен ответ GET /users/{}/events/{}/requests с телом: {}", userId, eventId, requests);
-        return requests;
-    }
-
-    @PatchMapping("/{eventId}/requests")
-    public EventRequestStatusUpdateResult updateStatus(@PathVariable Long userId, @PathVariable Long eventId, @RequestBody EventRequestStatusUpdateRequest requestsToUpdate) {
-        log.info("Пришел PATCH запрос /users/{}/events/{}/requests с телом {}", userId, eventId, requestsToUpdate);
-        final EventRequestStatusUpdateResult result = eventService.updateStatus(userId, eventId, requestsToUpdate);
-        log.info("Отправлен ответ PATCH /users/{}/events/{}/requests с телом: {}", userId, eventId, result);
-        return result;
-    }
-
 }

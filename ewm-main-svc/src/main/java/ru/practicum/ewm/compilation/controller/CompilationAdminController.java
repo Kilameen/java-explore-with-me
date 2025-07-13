@@ -21,21 +21,26 @@ public class CompilationAdminController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public CompilationDto create(@Valid @RequestBody NewCompilationDto newCompilationDto) {
-        log.info("Запрос на добавление подборки событий - ADMIN");
-        return compilationService.create(newCompilationDto);
+        log.info("POST запрос на добавление подборки событий - ADMIN: {}", newCompilationDto);
+        CompilationDto compilationDto = compilationService.create(newCompilationDto);
+        log.info("Подборка событий создана: {}", compilationDto);
+        return compilationDto;
     }
 
     @PatchMapping("/{compId}")
     public CompilationDto update(@Valid @RequestBody UpdateCompilationRequest updateCompilation,
                                  @PathVariable Long compId) {
-        log.info("Запрос на обновление подборки событий -ADMIN");
-        return compilationService.update(compId, updateCompilation);
+        log.info("PATCH запрос на обновление подборки событий с id={} - ADMIN: {}", compId, updateCompilation);
+        CompilationDto compilationDto = compilationService.update(compId, updateCompilation);
+        log.info("Подборка событий с id={} обновлена: {}", compId, compilationDto);
+        return compilationDto;
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
-        log.info("Запрос на удаление подборки событий - ADMIN");
-        compilationService.delete(id);
+        log.info("DELETE запрос на удаление подборки событий с id={} - ADMIN", id);
+        compilationService.delete(id); // Удаляем подборку
+        log.info("Подборка событий с id={} удалена", id);
     }
 }

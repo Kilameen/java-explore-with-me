@@ -6,21 +6,14 @@ import ru.practicum.ewm.request.model.EventRequest;
 
 @Component
 public class EventRequestMapper {
-    public ParticipationRequestDto toEventRequest(EventRequest request){
+    public ParticipationRequestDto toRequestDto(EventRequest request) {
+        if (request == null) {
+            return null;
+        }
         return ParticipationRequestDto.builder()
-                .id(request.getRequesterId())
-                .event(request.getEventId())
-                .requester(request.getRequesterId())
-                .status(request.getStatus())
-                .created(request.getCreated())
-                .build();
-    }
-
-    public  ParticipationRequestDto toParticipationRequestDto(EventRequest request) {
-              return ParticipationRequestDto.builder()
                 .id(request.getId())
-                .event(request.getEventId())
-                .requester(request.getRequesterId())
+                .event(request.getEvent().getId())
+                .requester(request.getRequester().getId())
                 .status(request.getStatus())
                 .created(request.getCreated())
                 .build();

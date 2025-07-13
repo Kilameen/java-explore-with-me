@@ -22,13 +22,17 @@ public class CompilationPublicController {
             @RequestParam(required = false) Boolean pinned,
             @RequestParam(defaultValue = "0")@PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10")@Positive Integer size) {
-        log.info("Запрос на получение подборки всех событий");
-        return compilationService.getAllCompilations(from, size, pinned);
+        log.info("GET запрос на получение подборок событий. pinned={}, from={}, size={}", pinned, from, size);
+        List<CompilationDto> compilations = compilationService.getAllCompilations(from, size, pinned);
+        log.info("Возвращен список подборок событий: {}", compilations);
+        return compilations;
     }
 
     @GetMapping("/{compId}")
     public CompilationDto findCompilationById(@PathVariable Long compId) {
-        log.info("Запрос на получение подборки событий по id = {}", compId);
-        return compilationService.findCompilationById(compId);
+        log.info("GET запрос на получение подборки событий по id = {}", compId);
+        CompilationDto compilationDto = compilationService.findCompilationById(compId);
+        log.info("Возвращена подборка событий по id = {}: {}", compId, compilationDto);
+        return compilationDto;
     }
 }

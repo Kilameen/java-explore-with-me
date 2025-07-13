@@ -1,12 +1,8 @@
 package ru.practicum.ewm.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.event.dto.*;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
-import ru.practicum.ewm.request.dto.ParticipationRequestDto;
-import ru.practicum.ewm.utils.enums.EventState;
+import ru.practicum.ewm.enums.EventState;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -27,11 +23,6 @@ public interface EventService {
 
     Collection<EventFullDto> findAllByAdmin(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
 
-EventFullDto findEventById(Long eventId, HttpServletRequest request);
+    EventFullDto findEventById(Long eventId, HttpServletRequest request);
 
-    List<ParticipationRequestDto> getByEventId(Long eventInitiatorId, Long eventId);
-
-    EventRequestStatusUpdateResult updateStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest requestsToUpdate);
-
-    void updateEventConfirmedRequests(Long eventId, int confirmedRequests);
 }

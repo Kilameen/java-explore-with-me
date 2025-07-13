@@ -14,15 +14,15 @@ import java.util.Set;
 @Component
 public class CompilationMapper {
 
-    public Compilation toCompilationFromNew(NewCompilationDto newCompilationDto, Set<Event> events){
-         return Compilation.builder()
+    public Compilation toCompilationFromNew(NewCompilationDto newCompilationDto, Set<Event> events) {
+        return Compilation.builder()
                 .pinned(newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
                 .events(events)
                 .build();
     }
 
-    public CompilationDto toCompilationDto(Compilation compilation, List<EventShortDto> events){
+    public CompilationDto toCompilationDto(Compilation compilation, List<EventShortDto> events) {
         return CompilationDto.builder()
                 .id(compilation.getId())
                 .pinned(compilation.getPinned())
@@ -30,14 +30,4 @@ public class CompilationMapper {
                 .events(events)
                 .build();
     }
-
-    public CompilationDto toUpdateCompilationDto(UpdateCompilationRequest compilationRequest,List<EventShortDto> events){
-        return CompilationDto.builder()
-                .id(compilationRequest.getId())
-                .pinned(compilationRequest.getPinned())
-                .title(compilationRequest.getTitle())
-                .events(events)
-                .build();
-    }
-    }
-
+}

@@ -5,9 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.location.dto.LocationDto;
-import ru.practicum.ewm.location.model.Location;
 import ru.practicum.ewm.user.dto.UserShortDto;
-import ru.practicum.ewm.utils.enums.EventState;
+import ru.practicum.ewm.enums.EventState;
 
 import java.time.LocalDateTime;
 
@@ -35,5 +34,5 @@ public class EventFullDto {
     UserShortDto initiator;
     CategoryDto category;
     long views;
-    int confirmedRequests;
+    long confirmedRequests;
 }

@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm.location.dto.LocationDto;
-import ru.practicum.ewm.location.model.Location;
 
 import java.time.LocalDateTime;
 

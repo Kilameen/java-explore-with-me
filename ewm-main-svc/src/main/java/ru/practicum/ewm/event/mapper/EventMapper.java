@@ -18,7 +18,6 @@ public class EventMapper {
     private final CategoryMapper categoryMapper;
     private final UserMapper userMapper;
 
-    // Преобразует NewEventDto в Event
     public Event toEvent(NewEventDto newEventDto) {
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
@@ -32,7 +31,6 @@ public class EventMapper {
                 .build();
     }
 
-    // Преобразует Event в EventFullDto
     public EventFullDto toEventFullDto(Event event) {
         return EventFullDto.builder()
                 .id(event.getId())
@@ -54,7 +52,6 @@ public class EventMapper {
                 .build();
     }
 
-    // Преобразует Event в EventShortDto
     public EventShortDto toEventShortDto(Event event) {
         return EventShortDto.builder()
                 .id(event.getId())
