@@ -7,14 +7,14 @@ import ru.practicum.ewm.location.model.Location;
 @Component
 public class LocationMapper {
 
-    public Location toLocationFromDto(LocationDto locationDto){
+    public Location toLocationFromDto(LocationDto locationDto) {
         return Location.builder()
                 .lat(locationDto.getLat())
                 .lon(locationDto.getLon())
                 .build();
     }
 
-    public LocationDto toLocationDto(Location location){
+    public LocationDto toLocationDto(Location location) {
         return LocationDto.builder()
                 .lat(location.getLat())
                 .lon(location.getLon())
