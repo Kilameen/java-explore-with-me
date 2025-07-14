@@ -23,7 +23,7 @@ public class StatisticsClient extends BaseClient {
     private final String appName;
 
     @Autowired
-    public StatisticsClient(@Value("${stat-server.url}") String serverUrl,
+    public StatisticsClient(@Value("${stats-server.url}") String serverUrl,
                             @Value("${app.name}") String appName,
                             RestTemplateBuilder builder) {
         super(

@@ -1,9 +1,9 @@
 services:
   stat-server:
     build:
-      context: ./stat-svc/stat-server
-    image: stat-server
-    container_name: stat-server
+      context: ./stat-svc/stats-server
+    image: stats-server
+    container_name: stats-server
     ports:
       - "9090:9090"
     depends_on:
@@ -12,11 +12,6 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
-    healthcheck:
-      test: curl --fail http://localhost:9090/actuator/health || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   statdb:
     image: postgres:16.1
@@ -40,15 +35,13 @@ services:
     container_name: ewm-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewmdb:5432/ewmdb
-        - SPRING_DATASOURCE_USERNAME=admin
-        - SPRING_DATASOURCE_PASSWORD=admin
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
     ports:
       - "8080:8080"
     depends_on:
-      stat-server:
-        condition: service_healthy
-      ewmdb:
-        condition: service_healthy
+      - stats-server
+      - ewmdb
 
   ewmdb:
     image: postgres:16.1
