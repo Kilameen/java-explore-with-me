@@ -1,5 +1,6 @@
 package ru.practicum.ewm.event;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -39,7 +40,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                 AND ((?4 IS NULL AND ?5 IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR (e.eventDate BETWEEN ?4 AND ?5))
                 AND (?6 = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
             """)
-    List<Event> findAllByPublic(
+    Page<Event> findAllByPublic(
             String text,
             List<Long> categories,
             Boolean paid,

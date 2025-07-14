@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
@@ -60,7 +61,7 @@ public class EventServiceImpl implements EventService {
 
     StatisticsClient statClient;
 
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper;
     EventMapper eventMapper;
     CategoryMapper categoryMapper;
     LocationMapper locationMapper;
@@ -227,7 +228,6 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Событие c ID " + eventId + " не найдено"));
 
         if (!event.getInitiator().getId().equals(userId)) {
-            log.warn("Пользователь с идентификатором {} не является инициатором события с идентификатором {}", userId, eventId);
             throw new ValidationException("Пользователь не является инициатором события");
         }
         return eventMapper.toEventFullDto(event);
@@ -239,24 +239,19 @@ public class EventServiceImpl implements EventService {
     public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
 
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
-            throw new IllegalArgumentException("rangeStart должен быть указан раньше rangeEnd");
+            throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
         sendStats(request);
 
         int page = (from == null || size == null || size <= 0) ? 0 : from / size;
         int pageSize = (size == null || size <= 0) ? 10 : size;
-
         Pageable pageable = PageRequest.of(page, pageSize);
 
-        List<Event> events;
-        try {
-            events = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
-        } catch (Exception e) {
-            log.error("Ошибка при выполнении запроса к БД: ", e);
-            throw new RuntimeException("Ошибка при получении данных из базы данных", e);
-        }
+        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
+        List<Event> events = eventPage.getContent();
 
         Map<Long, Long> views = getViewsAllEvents(events);
+
         List<EventShortDto> eventShortDtos = events.stream()
                 .map(event -> {
                     EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
