@@ -236,17 +236,16 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
-
-        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
-            throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
-        }
-        sendStats(request);
-
-        int page = (from == null || size == null || size <= 0) ? 0 : from / size;
-        int pageSize = (size == null || size <= 0) ? 10 : size;
-        Pageable pageable = PageRequest.of(page, pageSize);
-
         try {
+            if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+                throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
+            }
+            sendStats(request);
+
+            int page = (from == null || size == null || size <= 0) ? 0 : from / size;
+            int pageSize = (size == null || size <= 0) ? 10 : size;
+            Pageable pageable = PageRequest.of(page, pageSize);
+
             Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
             List<Event> events = eventPage.getContent();
 
@@ -254,6 +253,10 @@ public class EventServiceImpl implements EventService {
 
             List<EventShortDto> eventShortDtos = events.stream()
                     .map(event -> {
+                        if (event == null) {
+                            log.warn("Обнаружено null событие в списке!");
+                            return null; // Или выбросить исключение, если это недопустимо
+                        }
                         EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
                         Long viewCount = views.getOrDefault(event.getId(), DEFAULT_VIEWS);
                         eventShortDto.setViews(viewCount);
@@ -265,6 +268,7 @@ public class EventServiceImpl implements EventService {
                         }
                         return eventShortDto;
                     })
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
             if ("VIEWS".equalsIgnoreCase(sort)) {
@@ -275,7 +279,7 @@ public class EventServiceImpl implements EventService {
 
             return eventShortDtos;
         } catch (Exception e) {
-            log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e);
+            log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e); // Логируем исключение
             throw new RuntimeException("Ошибка при выполнении запроса.", e);
         }
     }
