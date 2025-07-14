@@ -277,31 +277,22 @@ public class EventServiceImpl implements EventService {
 
     @Transactional(readOnly = true)
     @Override
-    public Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size,HttpServletRequest request) {
-        // Получаем пользователя по ID. Если не найден, выбрасываем исключение.
+    public Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size, HttpServletRequest request) {
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь c ID " + userId + " не найден"));
 
-        // Создаем объект Pageable для пагинации результатов.
         Pageable pageable = PageRequest.of(from, size);
 
-        // Получаем список событий, инициированных пользователем, с учетом пагинации.
         List<Event> events = eventRepository.findAllByInitiatorId(user.getId(), pageable);
-
-        // Преобразуем список Event в список EventShortDto.
         return events.stream()
                 .map(event -> {
-                    // Преобразуем Event в EventShortDto с помощью mapper.
+
                     EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
 
-                    // Заполняем поля EventShortDto данными из связанных сущностей.
                     eventShortDto.setCategory(categoryMapper.toCategoryDto(event.getCategory()));
                     eventShortDto.setInitiator(userMapper.toUserShortDto(event.getInitiator()));
-
-                    // Получаем количество просмотров события.
                     eventShortDto.setViews(getViews(event.getId(), event.getCreatedOn(), request));
-
-                    // Получаем количество подтвержденных заявок на участие в событии.
                     eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
 
                     return eventShortDto;
@@ -407,13 +398,21 @@ public class EventServiceImpl implements EventService {
             ResponseEntity<Object> statsResponse = statClient.getStats(createdOn, end, List.of(uri), unique);
 
             if (statsResponse.getStatusCode().is2xxSuccessful() && statsResponse.hasBody()) {
-                List<ViewStatsDto> stats = Arrays.asList(mapper.convertValue(statsResponse.getBody(), ViewStatsDto[].class));
 
-                if (!stats.isEmpty()) {
-                    return stats.getFirst().getHits();
+                Object body = statsResponse.getBody();
+                if (body != null) {
+                    ViewStatsDto[] statsArray = mapper.convertValue(body, ViewStatsDto[].class);
+                    List<ViewStatsDto> stats = Arrays.asList(statsArray);
+
+                    if (!stats.isEmpty()) {
+                        return stats.getFirst().getHits();
+                    } else {
+                        log.info("Нет данных статистики для события {}", eventId);
+                    }
                 } else {
-                    log.info("Нет данных статистики для события {}", eventId);
+                    log.warn("Тело ответа от statClient пустое для события {}", eventId);
                 }
+
             } else {
                 log.warn("Неуспешный ответ от statClient для события {}: {}", eventId, statsResponse.getStatusCode());
             }
@@ -440,15 +439,26 @@ public class EventServiceImpl implements EventService {
             ResponseEntity<Object> response = statClient.getStats(earliestDate, LocalDateTime.now(),
                     uris, true);
 
-            List<ViewStatsDto> viewStatsList = mapper.convertValue(response.getBody(), new TypeReference<>() {
-            });
+            if (response.getStatusCode().is2xxSuccessful() && response.hasBody()) {
+                Object body = response.getBody();
+                if (body != null) {
+                    try {
+                        List<ViewStatsDto> viewStatsList = mapper.convertValue(body, new TypeReference<>() {
+                        });
 
-            viewStatsMap = viewStatsList.stream()
-                    .filter(statsDto -> statsDto.getUri().startsWith("/events/"))
-                    .collect(Collectors.toMap(
-                            statsDto -> Long.parseLong(statsDto.getUri().substring("/events/".length())),
-                            ViewStatsDto::getHits
-                    ));
+                        viewStatsMap = viewStatsList.stream()
+                                .filter(statsDto -> statsDto.getUri().startsWith("/events/"))
+                                .collect(Collectors.toMap(
+                                        statsDto -> Long.parseLong(statsDto.getUri().substring("/events/".length())),
+                                        ViewStatsDto::getHits
+                                ));
+                    } catch (IllegalArgumentException e) {
+                        log.error("Ошибка при преобразовании тела ответа для всех событий: {}", e.getMessage());
+                    }
+                } else {
+                    log.warn("Тело ответа от statClient пустое для всех событий");
+                }
+            }
         }
         return viewStatsMap;
     }
