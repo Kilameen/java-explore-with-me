@@ -255,7 +255,8 @@ public class EventServiceImpl implements EventService {
             List<EventShortDto> eventShortDtos = events.stream()
                     .map(event -> {
                         EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
-                        eventShortDto.setViews(views.getOrDefault(event.getId(), DEFAULT_VIEWS));
+                        Long viewCount = views.getOrDefault(event.getId(), DEFAULT_VIEWS);
+                        eventShortDto.setViews(viewCount);
                         try {
                             eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
                         } catch (Exception e) {

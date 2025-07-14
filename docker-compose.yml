@@ -34,7 +34,7 @@ services:
     image: ewm-service
     container_name: ewm-service
     environment:
-      STATS-SERVER_URL: http://stats-server:9090
+
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewmdb:5432/ewmdb
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin
