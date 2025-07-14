@@ -1,5 +1,6 @@
 package ru.practicum.ewm.event.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -50,10 +51,10 @@ public class PrivateEventController {
     public Collection<EventShortDto> findAllByPrivate(
             @PathVariable Long userId,
             @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
-            @RequestParam(required = false, defaultValue = "10") @Positive Integer size
+            @RequestParam(required = false, defaultValue = "10") @Positive Integer size, HttpServletRequest request
     ) {
         log.info("GET запрос /users/{}/events?from={}&size={}", userId, from, size);
-        Collection<EventShortDto> events = eventService.findAllByPrivate(userId, from, size);
+        Collection<EventShortDto> events = eventService.findAllByPrivate(userId, from, size,request);
         log.info("Отправлен ответ GET /users/{}/events?from={}&size={} с телом: {}", userId, from, size, events);
         return events;
     }
