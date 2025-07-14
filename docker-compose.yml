@@ -1,5 +1,5 @@
 services:
-  stat-server:
+  stats-server:
     build:
       context: ./stat-svc/stats-server
     image: stats-server
