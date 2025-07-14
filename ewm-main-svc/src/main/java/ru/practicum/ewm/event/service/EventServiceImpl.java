@@ -261,7 +261,7 @@ public class EventServiceImpl implements EventService {
                             eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
                         } catch (Exception e) {
                             log.error("Ошибка при получении confirmedRequests для события {}: {}", event.getId(), e.getMessage(), e);
-                            eventShortDto.setConfirmedRequests(0L); // Или другое значение по умолчанию
+                            eventShortDto.setConfirmedRequests(0L);
                         }
                         return eventShortDto;
                     })
