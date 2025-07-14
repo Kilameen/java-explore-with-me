@@ -391,40 +391,49 @@ public class EventServiceImpl implements EventService {
     }
 
     private void sendStats(HttpServletRequest request) {
-        statClient.create(request);
+        try {
+            statClient.create(request);
+        } catch (Exception e) {
+            log.error("Ошибка при отправке статистики: {}", e.getMessage());
+
+        }
     }
 
     private Long getViews(Long eventId, LocalDateTime createdOn, HttpServletRequest request) {
         LocalDateTime end = LocalDateTime.now();
         String uri = request.getRequestURI();
         Boolean unique = true;
+        Long defaultViews = DEFAULT_VIEWS;
 
         try {
             ResponseEntity<Object> statsResponse = statClient.getStats(createdOn, end, List.of(uri), unique);
 
             if (statsResponse.getStatusCode().is2xxSuccessful() && statsResponse.hasBody()) {
-
                 Object body = statsResponse.getBody();
                 if (body != null) {
-                    ViewStatsDto[] statsArray = mapper.convertValue(body, ViewStatsDto[].class);
-                    List<ViewStatsDto> stats = Arrays.asList(statsArray);
+                    try {
+                        ViewStatsDto[] statsArray = mapper.convertValue(body, ViewStatsDto[].class);
+                        List<ViewStatsDto> stats = Arrays.asList(statsArray);
 
-                    if (!stats.isEmpty()) {
-                        return stats.getFirst().getHits();
-                    } else {
-                        log.info("Нет данных статистики для события {}", eventId);
+                        if (!stats.isEmpty()) {
+                            return stats.getFirst().getHits();
+                        } else {
+                            log.info("Нет данных статистики для события {}", eventId);
+                        }
+                    } catch (Exception e) {
+                        log.error("Ошибка преобразования данных статистики для события {}: {}", eventId, e.getMessage());
+                        return defaultViews; // Возвращаем значение по умолчанию в случае ошибки преобразования
                     }
                 } else {
                     log.warn("Тело ответа от statClient пустое для события {}", eventId);
                 }
-
             } else {
                 log.warn("Неуспешный ответ от statClient для события {}: {}", eventId, statsResponse.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Ошибка при получении статистики для события {}: {}", eventId, e.getMessage());
         }
-        return DEFAULT_VIEWS;
+        return defaultViews;
     }
 
     private Map<Long, Long> getViewsAllEvents(List<Event> events) {
@@ -432,38 +441,44 @@ public class EventServiceImpl implements EventService {
                 .map(event -> String.format("/events/%s", event.getId()))
                 .collect(Collectors.toList());
 
-        List<LocalDateTime> startDates = events.stream()
+        LocalDateTime earliestDate = events.stream()
                 .map(Event::getCreatedOn)
-                .toList();
-        LocalDateTime earliestDate = startDates.stream()
                 .min(LocalDateTime::compareTo)
                 .orElse(null);
+
         Map<Long, Long> viewStatsMap = new HashMap<>();
 
         if (earliestDate != null) {
-            ResponseEntity<Object> response = statClient.getStats(earliestDate, LocalDateTime.now(),
-                    uris, true);
+            try {
+                ResponseEntity<Object> response = statClient.getStats(earliestDate, LocalDateTime.now(), uris, true);
 
-            if (response.getStatusCode().is2xxSuccessful() && response.hasBody()) {
-                Object body = response.getBody();
-                if (body != null) {
-                    try {
-                        List<ViewStatsDto> viewStatsList = mapper.convertValue(body, new TypeReference<>() {
-                        });
+                if (response.getStatusCode().is2xxSuccessful() && response.hasBody()) {
+                    Object body = response.getBody();
+                    if (body != null) {
+                        try {
+                            List<ViewStatsDto> viewStatsList = mapper.convertValue(body, new TypeReference<List<ViewStatsDto>>() {
+                            });
 
-                        viewStatsMap = viewStatsList.stream()
-                                .filter(statsDto -> statsDto.getUri().startsWith("/events/"))
-                                .collect(Collectors.toMap(
-                                        statsDto -> Long.parseLong(statsDto.getUri().substring("/events/".length())),
-                                        ViewStatsDto::getHits
-                                ));
-                    } catch (IllegalArgumentException e) {
-                        log.error("Ошибка при преобразовании тела ответа для всех событий: {}", e.getMessage());
+                            viewStatsMap = viewStatsList.stream()
+                                    .filter(statsDto -> statsDto.getUri().startsWith("/events/"))
+                                    .collect(Collectors.toMap(
+                                            statsDto -> Long.parseLong(statsDto.getUri().substring("/events/".length())),
+                                            ViewStatsDto::getHits
+                                    ));
+                        } catch (Exception e) {
+                            log.error("Ошибка при преобразовании тела ответа для всех событий: {}", e.getMessage());
+                        }
+                    } else {
+                        log.warn("Тело ответа от statClient пустое для всех событий");
                     }
                 } else {
-                    log.warn("Тело ответа от statClient пустое для всех событий");
+                    log.warn("Неуспешный ответ при запросе статистики для всех событий");
                 }
+            } catch (Exception e) {
+                log.error("Ошибка при получении статистики для всех событий: {}", e.getMessage());
             }
+        } else {
+            log.warn("Список событий пуст или не содержит дат создания");
         }
         return viewStatsMap;
     }

@@ -30,12 +30,14 @@ public class StatisticsClient extends BaseClient {
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                         .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
-                        .build()
+                        .build(),
+                serverUrl
         );
         this.appName = appName;
     }
 
     public ResponseEntity<Object> create(HttpServletRequest request) {
+
         EndpointHitCreateDto endpointHitCreateDto = EndpointHitCreateDto.builder()
                 .app(appName)
                 .uri(request.getRequestURI())
@@ -46,6 +48,7 @@ public class StatisticsClient extends BaseClient {
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/stats")
                 .queryParam("start", start.format(formatter))
                 .queryParam("end", end.format(formatter))
