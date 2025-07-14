@@ -233,7 +233,6 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toEventFullDto(event);
     }
 
-
     @Transactional(readOnly = true)
     @Override
     public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
@@ -422,7 +421,7 @@ public class EventServiceImpl implements EventService {
                         }
                     } catch (Exception e) {
                         log.error("Ошибка преобразования данных статистики для события {}: {}", eventId, e.getMessage());
-                        return defaultViews; // Возвращаем значение по умолчанию в случае ошибки преобразования
+                        return defaultViews;
                     }
                 } else {
                     log.warn("Тело ответа от statClient пустое для события {}", eventId);
