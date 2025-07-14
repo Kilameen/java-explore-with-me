@@ -247,27 +247,37 @@ public class EventServiceImpl implements EventService {
         int pageSize = (size == null || size <= 0) ? 10 : size;
         Pageable pageable = PageRequest.of(page, pageSize);
 
-        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
-        List<Event> events = eventPage.getContent();
+        try {
+            Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
+            List<Event> events = eventPage.getContent();
 
-        Map<Long, Long> views = getViewsAllEvents(events);
+            Map<Long, Long> views = getViewsAllEvents(events);
 
-        List<EventShortDto> eventShortDtos = events.stream()
-                .map(event -> {
-                    EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
-                    eventShortDto.setViews(views.getOrDefault(event.getId(), DEFAULT_VIEWS));
-                    eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
-                    return eventShortDto;
-                })
-                .collect(Collectors.toList());
+            List<EventShortDto> eventShortDtos = events.stream()
+                    .map(event -> {
+                        EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
+                        eventShortDto.setViews(views.getOrDefault(event.getId(), DEFAULT_VIEWS));
+                        try {
+                            eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
+                        } catch (Exception e) {
+                            log.error("Ошибка при получении confirmedRequests для события {}: {}", event.getId(), e.getMessage(), e);
+                            eventShortDto.setConfirmedRequests(0L); // Или другое значение по умолчанию
+                        }
+                        return eventShortDto;
+                    })
+                    .collect(Collectors.toList());
 
-        if ("VIEWS".equalsIgnoreCase(sort)) {
-            eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
-        } else {
-            eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+            if ("VIEWS".equalsIgnoreCase(sort)) {
+                eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
+            } else {
+                eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+            }
+
+            return eventShortDtos;
+        } catch (Exception e) {
+            log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e);
+            throw new RuntimeException("Ошибка при выполнении запроса.", e);
         }
-
-        return eventShortDtos;
     }
 
     @Transactional(readOnly = true)
