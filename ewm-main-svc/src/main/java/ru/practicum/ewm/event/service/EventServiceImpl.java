@@ -237,33 +237,36 @@ public class EventServiceImpl implements EventService {
     @Override
     public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
         try {
+
             if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
                 throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
             }
+
             sendStats(request);
 
-            int page = (from == null || size == null || size <= 0) ? 0 : from / size;
-            int pageSize = (size == null || size <= 0) ? 10 : size;
+            int page = (from != null && size != null && size > 0) ? from / size : 0;
+            int pageSize = (size != null && size > 0) ? size : 10;
             Pageable pageable = PageRequest.of(page, pageSize);
 
             Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
             List<Event> events = eventPage.getContent();
 
-            Map<Long, Long> views = getViewsAllEvents(events);
+            Map<Long, Long> views = getViewsAllEvents(events); // Получаем просмотры
 
             List<EventShortDto> eventShortDtos = events.stream()
+                    .filter(Objects::nonNull)
                     .map(event -> {
-                        if (event == null) {
-                            log.warn("Обнаружено null событие в списке!");
-                            return null; // Или выбросить исключение, если это недопустимо
-                        }
+                        if (event == null) return null;
                         EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
-                        Long viewCount = views.getOrDefault(event.getId(), DEFAULT_VIEWS);
-                        eventShortDto.setViews(viewCount);
+                        if (eventShortDto == null) {
+                            log.warn("Mapper вернул null для события id={}", event.getId());
+                            return null;
+                        }
+                        eventShortDto.setViews(views.getOrDefault(event.getId(), DEFAULT_VIEWS)); // Устанавливаем views
                         try {
                             eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
                         } catch (Exception e) {
-                            log.error("Ошибка при получении confirmedRequests для события {}: {}", event.getId(), e.getMessage(), e);
+                            log.error("Ошибка получения confirmedRequests для события {}: {}", event.getId(), e.getMessage(), e);
                             eventShortDto.setConfirmedRequests(0L);
                         }
                         return eventShortDto;
@@ -278,8 +281,9 @@ public class EventServiceImpl implements EventService {
             }
 
             return eventShortDtos;
+
         } catch (Exception e) {
-            log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e); // Логируем исключение
+            log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e);
             throw new RuntimeException("Ошибка при выполнении запроса.", e);
         }
     }
