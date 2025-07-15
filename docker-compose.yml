@@ -25,12 +25,12 @@ services:
       - "9090:9090"
     depends_on:
       statdb:
-        condition: service_healthy # Ждем, пока statdb не станет healthy
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
-    healthcheck: # Проверяем, что stats-server отвечает
+    healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health | grep UP || exit 1"]
       interval: 10s
       timeout: 5s
@@ -45,8 +45,8 @@ services:
       - POSTGRES_DB=ewmdb
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
-    healthcheck: # Добавляем проверку состояния БД
-      test: ["CMD-SHELL", "pg_isready -U admin -d ewmdb"] # Проверяем готовность
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d ewmdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -65,10 +65,10 @@ services:
       - "8080:8080"
     depends_on:
       ewmdb:
-        condition: service_healthy # Ждем, пока ewmdb не станет healthy
+        condition: service_healthy
       stats-server:
-        condition: service_healthy # Ждем, пока stats-server не станет healthy
-    healthcheck: # Проверяем, что ewm-service отвечает
+        condition: service_healthy
+    healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health | grep UP || exit 1"]
       interval: 10s
       timeout: 5s

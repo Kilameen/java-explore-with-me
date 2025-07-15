@@ -421,7 +421,7 @@ public class EventServiceImpl implements EventService {
                         List<ViewStatsDto> stats = Arrays.asList(statsArray);
 
                         if (!stats.isEmpty()) {
-                            return stats.getFirst().getHits();
+                            return stats.getLast().getHits();
                         } else {
                             log.info("Нет данных статистики для события {}", eventId);
                         }
