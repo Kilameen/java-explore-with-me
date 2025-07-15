@@ -36,7 +36,7 @@ public class PublicEventController {
                                                      HttpServletRequest request) {
         log.info("GET запрос /events с параметрами: text={}, categories={}, paid={}, rangeStart={}, rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
-        final Collection<EventShortDto> events = eventService.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);
+        Collection<EventShortDto> events = eventService.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);
         log.info("Отправлен ответ GET /events с телом: {}", events);
         return events;
     }
@@ -44,7 +44,7 @@ public class PublicEventController {
     @GetMapping("/{eventId}")
     public EventFullDto findEventById(@PathVariable Long eventId, HttpServletRequest request) {
         log.info("GET запрос /events/{}", eventId);
-        final EventFullDto event = eventService.findEventById(eventId, request);
+        EventFullDto event = eventService.findEventById(eventId, request);
         log.info("Отправлен ответ GET /events/{} с телом: {}", eventId, event);
         return event;
     }

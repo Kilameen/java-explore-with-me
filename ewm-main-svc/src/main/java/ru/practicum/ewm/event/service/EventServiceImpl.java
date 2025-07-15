@@ -237,7 +237,6 @@ public class EventServiceImpl implements EventService {
     @Override
     public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
         try {
-
             if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
                 throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
             }
@@ -251,18 +250,17 @@ public class EventServiceImpl implements EventService {
             Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
             List<Event> events = eventPage.getContent();
 
-            Map<Long, Long> views = getViewsAllEvents(events); // Получаем просмотры
+            Map<Long, Long> views = getViewsAllEvents(events);
 
             List<EventShortDto> eventShortDtos = events.stream()
                     .filter(Objects::nonNull)
                     .map(event -> {
-                        if (event == null) return null;
                         EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
                         if (eventShortDto == null) {
                             log.warn("Mapper вернул null для события id={}", event.getId());
                             return null;
                         }
-                        eventShortDto.setViews(views.getOrDefault(event.getId(), DEFAULT_VIEWS)); // Устанавливаем views
+                        eventShortDto.setViews(views.getOrDefault(event.getId(), DEFAULT_VIEWS));
                         try {
                             eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
                         } catch (Exception e) {
@@ -407,6 +405,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    @Transactional(readOnly = true)
     private Long getViews(Long eventId, LocalDateTime createdOn, HttpServletRequest request) {
         LocalDateTime end = LocalDateTime.now();
         String uri = request.getRequestURI();
