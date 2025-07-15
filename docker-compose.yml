@@ -1,5 +1,4 @@
 services:
-
   ewmdb:
     image: postgres:16.1
     container_name: ewmdb
@@ -9,11 +8,11 @@ services:
       - POSTGRES_DB=ewmdb
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
-    healthcheck: # Добавляем healthcheck
-      test: [ "CMD-SHELL", "pg_isready -U admin -d ewmdb" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    healthcheck: # Добавляем healthcheck для проверки готовности базы данных
+      test: [ "CMD-SHELL", "pg_isready -U admin -d ewmdb" ] # Используем pg_isready
+      interval: 10s # Проверка каждые 10 секунд
+      timeout: 5s  # Таймаут 5 секунд
+      retries: 3  # 3 попытки
 
   ewm-service:
     build:
@@ -21,7 +20,6 @@ services:
     image: ewm-service
     container_name: ewm-service
     environment:
-
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewmdb:5432/ewmdb
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin
@@ -29,8 +27,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - ewmdb
-      - stats-server
+      ewmdb: # Явно указываем зависимость от ewmdb
+        condition: service_healthy # Ждем, пока ewmdb не станет healthy
+      stats-server: # Явно указываем зависимость от stats-server
+        condition: service_healthy # Ждем, пока stats-server не станет healthy
 
   stats-server:
     build:
@@ -40,7 +40,8 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      - statdb
+      statdb: # Явно указываем зависимость от statdb
+        condition: service_healthy # Ждем, пока statdb не станет healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
       - SPRING_DATASOURCE_USERNAME=admin
@@ -55,8 +56,8 @@ services:
       - POSTGRES_PASSWORD=admin
       - POSTGRES_USER=admin
       - POSTGRES_DB=statdb
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d statdb" ]
+    healthcheck: # Добавляем healthcheck для statdb
+      test: [ "CMD-SHELL", "pg_isready -U admin -d statdb" ] # Проверяем statdb
       interval: 10s
       timeout: 5s
       retries: 3
