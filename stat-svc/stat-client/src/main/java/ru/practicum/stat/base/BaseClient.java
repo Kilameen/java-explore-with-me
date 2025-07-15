@@ -19,7 +19,7 @@ public class BaseClient {
     }
 
     protected ResponseEntity<Object> get(String path) {
-        return makeAndSendRequest(path);
+        return makeAndSendRequest(statsUri + path);
     }
 
     protected ResponseEntity<Object> post(Object body) {
