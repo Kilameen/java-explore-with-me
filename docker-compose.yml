@@ -1,4 +1,41 @@
+version: "3.9" # Укажите версию Compose файла
+
 services:
+  statdb:
+    image: postgres:16.1
+    container_name: statdb
+    ports:
+      - "6541:5432"
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=statdb
+    healthcheck: # Добавляем проверку состояния БД
+      test: ["CMD-SHELL", "pg_isready -U admin -d statdb"] # Проверяем готовность
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  stats-server:
+    build:
+      context: ./stat-svc/stats-server
+    image: stats-server
+    container_name: stats-server
+    ports:
+      - "9090:9090"
+    depends_on:
+      statdb:
+        condition: service_healthy # Ждем, пока statdb не станет healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+    healthcheck: # Проверяем, что stats-server отвечает
+      test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health | grep UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ewmdb:
     image: postgres:16.1
     container_name: ewmdb
@@ -8,11 +45,11 @@ services:
       - POSTGRES_DB=ewmdb
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d ewmdb" ]
+    healthcheck: # Добавляем проверку состояния БД
+      test: ["CMD-SHELL", "pg_isready -U admin -d ewmdb"] # Проверяем готовность
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
 
   ewm-service:
     build:
@@ -28,41 +65,11 @@ services:
       - "8080:8080"
     depends_on:
       ewmdb:
-        condition: service_healthy
+        condition: service_healthy # Ждем, пока ewmdb не станет healthy
       stats-server:
-        condition: service_healthy
-
-  stats-server:
-    build:
-      context: ./stat-svc/stats-server
-    image: stats-server
-    container_name: stats-server
-    ports:
-      - "9090:9090"
-    depends_on:
-      statdb:
-        condition: service_healthy
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin
-    healthcheck: # Добавляем healthcheck для stats-server
-      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health | grep '\"status\": \"UP\"'" ]  # Проверяем health endpoint
+        condition: service_healthy # Ждем, пока stats-server не станет healthy
+    healthcheck: # Проверяем, что ewm-service отвечает
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health | grep UP || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 3
-
-  statdb:
-    image: postgres:16.1
-    container_name: statdb
-    ports:
-      - "6541:5432"
-    environment:
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_USER=admin
-      - POSTGRES_DB=statdb
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d statdb" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      retries: 5
