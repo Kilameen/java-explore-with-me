@@ -1,5 +1,20 @@
 services:
 
+  ewmdb:
+    image: postgres:16.1
+    container_name: ewmdb
+    ports:
+      - "6542:5432"
+    environment:
+      - POSTGRES_DB=ewmdb
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    healthcheck: # Добавляем healthcheck
+      test: [ "CMD-SHELL", "pg_isready -U admin -d ewmdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   ewm-service:
     build:
       context: ./ewm-main-svc
@@ -16,16 +31,6 @@ services:
     depends_on:
       - ewmdb
       - stats-server
-
-  ewmdb:
-    image: postgres:16.1
-    container_name: ewmdb
-    ports:
-      - "6542:5432"
-    environment:
-      - POSTGRES_DB=ewmdb
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
 
   stats-server:
     build:
@@ -50,4 +55,8 @@ services:
       - POSTGRES_PASSWORD=admin
       - POSTGRES_USER=admin
       - POSTGRES_DB=statdb
-
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d ewmdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
