@@ -33,6 +33,7 @@ import ru.practicum.ewm.enums.RequestStatus;
 import ru.practicum.ewm.enums.StateAction;
 import ru.practicum.stat.StatisticsClient;
 import ru.practicum.stat.ViewStatsDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -444,50 +445,33 @@ public class EventServiceImpl implements EventService {
         return defaultViews;
     }
 
-    private Map<Long, Long> getViewsAllEvents(List<Event> events) {
-        List<String> uris = events.stream()
-                .map(event -> String.format("/events/%s", event.getId()))
-                .collect(Collectors.toList());
-
-        LocalDateTime earliestDate = events.stream()
-                .map(Event::getCreatedOn)
-                .min(LocalDateTime::compareTo)
-                .orElse(null);
-
+    private Map<Long, Long> getViewsAllEvents(Collection<Event> events) {
         Map<Long, Long> viewStatsMap = new HashMap<>();
-
-        if (earliestDate != null) {
-            try {
-                ResponseEntity<Object> response = statClient.getStats(earliestDate, LocalDateTime.now(), uris, true);
-
-                if (response.getStatusCode().is2xxSuccessful() && response.hasBody()) {
-                    Object body = response.getBody();
-                    if (body != null) {
-                        try {
-                            List<ViewStatsDto> viewStatsList = mapper.convertValue(body, new TypeReference<List<ViewStatsDto>>() {
-                            });
-
-                            viewStatsMap = viewStatsList.stream()
-                                    .filter(statsDto -> statsDto.getUri().startsWith("/events/"))
-                                    .collect(Collectors.toMap(
-                                            statsDto -> Long.parseLong(statsDto.getUri().substring("/events/".length())),
-                                            ViewStatsDto::getHits
-                                    ));
-                        } catch (Exception e) {
-                            log.error("Ошибка при преобразовании тела ответа для всех событий: {}", e.getMessage());
-                        }
-                    } else {
-                        log.warn("Тело ответа от statClient пустое для всех событий");
-                    }
-                } else {
-                    log.warn("Неуспешный ответ при запросе статистики для всех событий");
-                }
-            } catch (Exception e) {
-                log.error("Ошибка при получении статистики для всех событий: {}", e.getMessage());
-            }
-        } else {
-            log.warn("Список событий пуст или не содержит дат создания");
+        LocalDateTime start = events.stream().map(Event::getCreatedOn).min(LocalDateTime::compareTo).orElse(null);
+        if (start == null) {
+            return Map.of();
         }
+        List<String> uris = events.stream().map(a -> "/events/" + a.getId()).collect(Collectors.toList());
+
+        ResponseEntity<Object> response = statClient.getStats(start,
+                LocalDateTime.now(), uris, true);
+
+        try {
+            ViewStatsDto[] stats = mapper.readValue(
+                    mapper.writeValueAsString(response.getBody()), ViewStatsDto[].class);
+
+
+            for (ViewStatsDto stat : stats) {
+                viewStatsMap.put(
+                        Long.parseLong(stat.getUri().replaceAll("\\D+", "")),
+                        stat.getHits());
+            }
+
+        } catch (JsonProcessingException e) {
+            log.error("JsonProcessingException exc - can't parse");
+            throw new RuntimeException("Statistics error");
+        }
+        log.info("Result: view size = {}", viewStatsMap.size());
         return viewStatsMap;
     }
 }
