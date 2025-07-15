@@ -411,8 +411,8 @@ public class EventServiceImpl implements EventService {
 
         try {
             ResponseEntity<Object> statsResponse = statClient.getStats(createdOn, end, List.of(uri), unique);
-            log.info("Запрос к statClient: URI={}, from={}, to={}, unique={}", uri, createdOn, end, unique); // Добавлено логирование параметров запроса
-            log.info("Ответ от statClient: status={}, body={}", statsResponse.getStatusCode(), statsResponse.getBody()); // Добавлено логирование ответа
+            log.info("Запрос к statClient: URI={}, from={}, to={}, unique={}", uri, createdOn, end, unique);
+            log.info("Ответ от statClient: status={}, body={}", statsResponse.getStatusCode(), statsResponse.getBody());
             if (statsResponse.getStatusCode().is2xxSuccessful() && statsResponse.hasBody()) {
                 Object body = statsResponse.getBody();
                 if (body != null) {
