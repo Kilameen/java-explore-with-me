@@ -56,7 +56,7 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_DB=statdb
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d ewmdb" ]
+      test: [ "CMD-SHELL", "pg_isready -U admin -d statdb" ]
       interval: 10s
       timeout: 5s
       retries: 3
