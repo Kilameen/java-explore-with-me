@@ -1,32 +1,4 @@
 services:
-  stats-server:
-    build:
-      context: ./stat-svc/stats-server
-    image: stats-server
-    container_name: stats-server
-    ports:
-      - "9090:9090"
-    depends_on:
-      - statdb
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin
-
-  statdb:
-    image: postgres:16.1
-    container_name: statdb
-    ports:
-      - "6541:5432"
-    environment:
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_USER=admin
-      - POSTGRES_DB=statdb
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 7s
-      interval: 7s
-      retries: 10
 
   ewm-service:
     build:
@@ -54,8 +26,28 @@ services:
       - POSTGRES_DB=ewmdb
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 7s
-      interval: 7s
-      retries: 10
+
+  stats-server:
+    build:
+      context: ./stat-svc/stats-server
+    image: stats-server
+    container_name: stats-server
+    ports:
+      - "9090:9090"
+    depends_on:
+      - statdb
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+
+  statdb:
+    image: postgres:16.1
+    container_name: statdb
+    ports:
+      - "6541:5432"
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=statdb
+
