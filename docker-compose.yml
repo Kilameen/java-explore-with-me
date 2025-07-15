@@ -1,9 +1,9 @@
 services:
-  stats-server:
+  stat-server:
     build:
       context: ./stat-svc/stats-server
-    image: stats-server
-    container_name: stats-server
+    image: stat-server
+    container_name: stat-server
     ports:
       - "9090:9090"
     depends_on:
@@ -43,7 +43,7 @@ services:
       - "8080:8080"
     depends_on:
       - ewmdb
-      - stats-server
+      - stat-server
 
   ewmdb:
     image: postgres:16.1
