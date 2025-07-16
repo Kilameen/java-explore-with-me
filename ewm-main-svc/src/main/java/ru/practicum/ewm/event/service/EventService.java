@@ -21,7 +21,9 @@ public interface EventService {
 
     Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size,HttpServletRequest request);
 
-    Collection<EventFullDto> findAllByAdmin(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
+
+
+    Collection<EventFullDto> findAllByAdmin(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size, HttpServletRequest request);
 
     EventFullDto findEventById(Long eventId, HttpServletRequest request);
 

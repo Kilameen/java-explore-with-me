@@ -33,7 +33,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         return EndpointHitMapper.toEndpointHitDto(createdHit);
     }
 
-    @Transactional(readOnly = true)
+
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         log.info("Получение статистики с start={}, end={}, uris={}, unique={}", start, end, uris, unique);
