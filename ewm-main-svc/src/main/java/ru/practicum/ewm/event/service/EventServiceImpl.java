@@ -154,8 +154,7 @@ public class EventServiceImpl implements EventService {
             if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
                 throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
             }
-            long previousHits = getHits(request);
-            log.info("Получаем текущее количество просмотров: {}", previousHits);
+
             sendStats(request);
             long newHits = getHits(request);
             Pageable pageable = PageRequest.of(from, size);
