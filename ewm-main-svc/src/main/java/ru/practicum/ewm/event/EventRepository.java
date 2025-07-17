@@ -45,7 +45,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             """)
     Page<Event> findAllByPublic(
             String text,
-            List<Long> categories,
+            List categories,
             Boolean paid,
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
