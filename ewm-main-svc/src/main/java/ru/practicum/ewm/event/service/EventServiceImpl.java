@@ -151,15 +151,18 @@ public class EventServiceImpl implements EventService {
     @Override
     public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
         try {
+
             if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
                 throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
             }
 
             sendStats(request);
             long newHits = getHits(request);
+
             Pageable pageable = PageRequest.of(from, size);
+
             Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
-            List<Event> events = eventPage.getContent();
+            List<Event> events = (eventPage != null) ? eventPage.getContent() : Collections.emptyList();
 
             List<EventShortDto> eventShortDtos = events.stream()
                     .filter(Objects::nonNull)
@@ -174,7 +177,7 @@ public class EventServiceImpl implements EventService {
                             eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
                         } catch (Exception e) {
                             log.error("Ошибка получения confirmedRequests для события {}: {}", event.getId(), e.getMessage(), e);
-                            eventShortDto.setConfirmedRequests(DEFAULT_CONFIRMED_REQUESTS);
+                            eventShortDto.setConfirmedRequests(0L);
                         }
                         return eventShortDto;
                     })
