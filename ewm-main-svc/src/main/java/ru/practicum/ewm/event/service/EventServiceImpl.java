@@ -170,10 +170,34 @@ public class EventServiceImpl implements EventService {
 
         // Получение списка событий из репозитория с пагинацией
         Pageable pageable = PageRequest.of(from / size, size);
-        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid,
-                rangeStart, rangeEnd, onlyAvailable, pageable);
+        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, onlyAvailable, pageable);
 
-        List<EventShortDto> eventShortDtos = eventPage.getContent().stream()
+        List<Event> events = eventPage.getContent();
+
+        // Фильтрация по датам
+        if (rangeStart != null) {
+            LocalDateTime finalRangeStart = rangeStart;
+            events = events.stream()
+                    .filter(event -> event.getEventDate().isAfter(finalRangeStart))
+                    .collect(Collectors.toList());
+        }
+
+        if (rangeEnd != null) {
+            LocalDateTime finalRangeEnd = rangeEnd;
+            events = events.stream()
+                    .filter(event -> event.getEventDate().isBefore(finalRangeEnd))
+                    .collect(Collectors.toList());
+        }
+
+
+        // Фильтрация по доступности
+        if (onlyAvailable != null && onlyAvailable) {
+            events = events.stream()
+                    .filter(event -> event.getParticipantLimit() == 0 || event.getConfirmedRequests() < event.getParticipantLimit())
+                    .collect(Collectors.toList());
+        }
+
+        List<EventShortDto> eventShortDtos = events.stream()
                 .map(event -> {
                     EventShortDto eventDto = eventMapper.toEventShortDto(event);
                     eventDto.setViews(getViews(event.getId(), event.getCreatedOn(), request));
