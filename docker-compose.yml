@@ -13,7 +13,7 @@ services:
     healthcheck: # Добавляем проверку состояния БД
       test: ["CMD-SHELL", "pg_isready -U admin -d statdb"] # Проверяем готовность
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
 
   stats-server:
@@ -33,7 +33,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health | grep UP || exit 1"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
 
   ewmdb:
@@ -48,7 +48,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d ewmdb"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
 
   ewm-service:
@@ -71,5 +71,5 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health | grep UP || exit 1"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
