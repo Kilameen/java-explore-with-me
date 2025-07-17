@@ -30,9 +30,9 @@ public class PublicEventController {
                                                      @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
                                                      @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                                      @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
-                                                     @RequestParam(defaultValue = "EVENT_DATE") String sort,
-                                                     @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
-                                                     @RequestParam(defaultValue = "10") @Positive Integer size,
+                                                     @RequestParam(required = false) String sort,
+                                                     @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
+                                                     @RequestParam(required = false, defaultValue = "10") @Positive Integer size,
                                                      HttpServletRequest request) {
         log.info("GET запрос /events с параметрами: text={}, categories={}, paid={}, rangeStart={}, rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
@@ -48,5 +48,4 @@ public class PublicEventController {
         log.info("Отправлен ответ GET /events/{} с телом: {}", eventId, event);
         return event;
     }
-
 }

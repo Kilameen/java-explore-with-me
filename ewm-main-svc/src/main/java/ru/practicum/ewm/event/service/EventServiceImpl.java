@@ -150,61 +150,54 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
-        try {
 
-            if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
-                throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
-            }
-
-            try {
-                sendStats(request);
-            } catch (Exception e) {
-                log.error("Ошибка при отправке статистики:", e);//Логируем полное исключение
-            }
-            long newHits = DEFAULT_VIEWS;
-            try {
-                newHits = getHits(request);
-            } catch (Exception e) {
-                log.error("Ошибка при получении статистики:", e);//Логируем полное исключение
-            }
-            Pageable pageable = PageRequest.of(from, size);
-
-            Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
-            List<Event> events = (eventPage != null) ? eventPage.getContent() : Collections.emptyList();
-
-            long finalNewHits = newHits;
-            List<EventShortDto> eventShortDtos = events.stream()
-                    .filter(Objects::nonNull)
-                    .map(event -> {
-                        EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
-                        if (eventShortDto == null) {
-                            log.warn("Mapper вернул null для события id={}", event.getId());
-                            return null;
-                        }
-                        eventShortDto.setViews(finalNewHits);
-                        try {
-                            eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
-                        } catch (Exception e) {
-                            log.error("Ошибка получения confirmedRequests для события {}: {}", event.getId(), e.getMessage(), e);
-                            eventShortDto.setConfirmedRequests(0L);
-                        }
-                        return eventShortDto;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            if ("VIEWS".equalsIgnoreCase(sort)) {
-                eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
-            } else {
-                eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
-            }
-
-            return eventShortDtos;
-
-        } catch (Exception e) {
-            log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e);
-            throw new RuntimeException("Ошибка при выполнении запроса.", e);
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
+
+        try {
+            sendStats(request);
+        } catch (Exception e) {
+            log.error("Ошибка при отправке статистики:", e);
+        }
+        long newHits = getHits(request);
+
+        LocalDateTime now = LocalDateTime.now();
+        if (rangeStart == null) {
+            rangeStart = now;
+        }
+
+        Pageable pageable = PageRequest.of(from, size);
+
+        Page<Event> eventPage = eventRepository.findAllByPublic(
+                text.toLowerCase(),
+                categories,
+                paid,
+                rangeStart,
+                rangeEnd,
+                onlyAvailable,
+                pageable
+        );
+
+        List<Event> events = eventPage.getContent();
+
+        List<EventShortDto> eventShortDtos = events.stream()
+                .map(event -> {
+                    EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
+                    eventShortDto.setViews(newHits);
+                    eventShortDto.setConfirmedRequests(eventRequestRepository
+                            .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED)); // Получение одобренных заявок
+                    return eventShortDto;
+                })
+                .collect(Collectors.toList());
+
+
+        if ("VIEWS".equalsIgnoreCase(sort)) {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
+        } else {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+        }
+        return eventShortDtos;
     }
 
     @Override
