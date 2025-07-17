@@ -39,13 +39,17 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     AND ((?3 IS NULL AND (e.paid = true OR e.paid = false)) OR e.paid = ?3)
     AND (
         (?4 IS NULL AND ?5 IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR
-        (e.eventDate BETWEEN COALESCE(?4, e.eventDate) AND COALESCE(?5, e.eventDate))
+        (e.eventDate BETWEEN 
+            CASE WHEN ?4 IS NULL THEN e.eventDate ELSE CAST(?4 AS timestamp) END 
+            AND 
+            CASE WHEN ?5 IS NULL THEN e.eventDate ELSE CAST(?5 AS timestamp) END
+        )
     )
     AND (?6 = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
 """)
     Page<Event> findAllByPublic(
             String text,
-            List<Long> categories,
+            List<?> categories,
             Boolean paid,
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
