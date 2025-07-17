@@ -149,60 +149,50 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid,
-                                                     LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                                     Boolean onlyAvailable, String sort, Integer from, Integer size,
-                                                     HttpServletRequest request) {
-        // Проверка, чтобы rangeStart был раньше rangeEnd
+    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
+
+        // Валидация диапазона дат
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
-        // Отправка статистики
-        try {
-            sendStats(request);
-        } catch (Exception e) {
-            log.error("Ошибка при отправке статистики:", e);
+
+        LocalDateTime actualRangeStart = rangeStart;
+        LocalDateTime actualRangeEnd = rangeEnd;
+
+        // Если диапазон не указан, используем текущее время как начало
+        if (actualRangeStart == null && actualRangeEnd == null) {
+            actualRangeStart = LocalDateTime.now();
         }
-        // Получение количества запросов
-        long newHits = getHits(request);
-        LocalDateTime now = LocalDateTime.now();
-        // Установка rangeStart на текущее время, если он не задан
-        if (rangeStart == null) {
-            rangeStart = now;
-        }
-        // Создание объекта Pageable для пагинации
+
+        //Подготовка к пагинации
         Pageable pageable = PageRequest.of(from, size);
-        // Выполнение запроса к репозиторию с использованием заданных параметров
+
+        //Получаем события
         Page<Event> eventPage = eventRepository.findAllByPublic(
-                text != null ? text.toLowerCase() : null,
+                (text != null) ? text.toLowerCase() : null,
                 categories,
                 paid,
-                rangeStart,
-                rangeEnd,
+                actualRangeStart, // Используем обьект, чтоб не было null
+                actualRangeEnd, // Используем обьект, чтоб не было null
                 onlyAvailable,
                 pageable
         );
 
-        List<Event> events = eventPage.getContent();
+        //маппим события в DTO
+        List<EventShortDto> eventShortDtos = eventPage.getContent().stream().map(event -> {
+            EventShortDto dto = eventMapper.toEventShortDto(event);
+            dto.setViews(getHits(request)); // кол-во просмотров
+            dto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED)); // кол-во апрувнутых запросов
+            return dto;
+        }).collect(Collectors.toList());
 
-        // Преобразование событий в DTO
-        List<EventShortDto> eventShortDtos = events.stream()
-                .map(event -> {
-                    EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
-                    eventShortDto.setViews(newHits);
-                    eventShortDto.setConfirmedRequests(eventRequestRepository
-                            .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
-                    return eventShortDto;
-                })
-                .collect(Collectors.toList());
-
-        // Сортировка по заданному критерию
+        // Сортируем по
         if ("VIEWS".equalsIgnoreCase(sort)) {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
         } else {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
         }
-        return eventShortDtos; // Возврат результата
+        return eventShortDtos;
     }
 
     @Override
