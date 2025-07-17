@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.enums.EventState;
 
@@ -32,21 +31,24 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     );
 
     @Query("""
-                SELECT e FROM Event e
+                SELECT e
+                FROM Event e
                 WHERE e.state = 'PUBLISHED'
-                AND (:text IS NULL OR lower(e.annotation) LIKE %:text% OR lower(e.description) LIKE %:text%)
-                AND (:categories IS NULL OR e.category.id IN :categories)
-                AND (:paid IS NULL OR e.paid = :paid)
-                AND ((:rangeStart IS NULL AND :rangeEnd IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR (e.eventDate BETWEEN :rangeStart AND :rangeEnd))
-                AND (:onlyAvailable = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
+                AND (?1 IS NULL OR lower(e.annotation) LIKE lower(concat('%', ?1, '%')) OR lower(e.description) LIKE lower(concat('%', ?1, '%')))
+                AND (?2 IS NULL OR e.category.id IN ?2)
+                AND (?3 IS NULL OR e.paid = ?3)
+                AND ((?4 IS NULL AND ?5 IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR (e.eventDate BETWEEN ?4 AND ?5))
+                AND (?6 = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
             """)
-    Page<Event> findAllByPublic(@Param("text") String text,
-                                @Param("categories") List<Long> categories,
-                                @Param("paid") Boolean paid,
-                                @Param("rangeStart") LocalDateTime rangeStart,
-                                @Param("rangeEnd") LocalDateTime rangeEnd,
-                                @Param("onlyAvailable") Boolean onlyAvailable,
-                                Pageable pageable);
+    Page<Event> findAllByPublic(
+            String text,
+            List<Long> categories,
+            Boolean paid,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            Boolean onlyAvailable,
+            Pageable pageable
+    );
 
     List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
 
