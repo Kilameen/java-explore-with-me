@@ -155,26 +155,24 @@ public class EventServiceImpl implements EventService {
                                                      Integer from, Integer size,
                                                      HttpServletRequest request) {
 
-        // Проверка корректности временных параметров
+        // Проверка временных параметров на корректность
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
 
-        // Проверка на допустимость типа сортировки
+        // Проверка на допустимый тип сортировки
         if (sort != null && !List.of("EVENT_DATE", "VIEWS").contains(sort.toUpperCase())) {
             throw new IncorrectRequestException("Unknown sort type");
         }
 
-        // Отправка статистики
+        // Отправка статистики о запросе
         sendStats(request);
 
         // Получение списка событий из репозитория с пагинацией
-        Pageable pageable = PageRequest.of(from, size);
+        Pageable pageable = PageRequest.of(from / size, size);
         Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid,
-                rangeStart, rangeEnd,
-                onlyAvailable, pageable);
+                rangeStart, rangeEnd, onlyAvailable, pageable);
 
-        // Преобразование событий в DTO и установка количества просмотров
         List<EventShortDto> eventShortDtos = eventPage.getContent().stream()
                 .map(event -> {
                     EventShortDto eventDto = eventMapper.toEventShortDto(event);
@@ -190,7 +188,7 @@ public class EventServiceImpl implements EventService {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
         }
 
-        return eventShortDtos; // Возвращаем список DTO
+        return eventShortDtos;
     }
 
     @Override
@@ -356,34 +354,15 @@ public class EventServiceImpl implements EventService {
     private Long getViews(Long eventId, LocalDateTime createdOn, HttpServletRequest request) {
         LocalDateTime end = LocalDateTime.now();
         String uri = request.getRequestURI();
-        Boolean unique = true;
         Long defaultViews = DEFAULT_VIEWS;
 
         try {
-            ResponseEntity<Object> statsResponse = statClient.getStats(createdOn, end, List.of(uri), unique);
-            log.info("Запрос к statClient: URI={}, from={}, to={}, unique={}", uri, createdOn, end, unique);
-            log.info("Ответ от statClient: status={}, body={}", statsResponse.getStatusCode(), statsResponse.getBody());
+            ResponseEntity<Object> statsResponse = statClient.getStats(createdOn, end, List.of(uri), true);
             if (statsResponse.getStatusCode().is2xxSuccessful() && statsResponse.hasBody()) {
-                Object body = statsResponse.getBody();
-                if (body != null) {
-                    try {
-                        ViewStatsDto[] statsArray = mapper.convertValue(body, ViewStatsDto[].class);
-                        List<ViewStatsDto> stats = Arrays.asList(statsArray);
-
-                        if (!stats.isEmpty()) {
-                            return stats.getLast().getHits();
-                        } else {
-                            log.info("Нет данных статистики для события {}", eventId);
-                        }
-                    } catch (Exception e) {
-                        log.error("Ошибка преобразования данных статистики для события {}: {}", eventId, e.getMessage());
-                        return defaultViews;
-                    }
-                } else {
-                    log.warn("Тело ответа от statClient пустое для события {}", eventId);
+                ViewStatsDto[] statsArray = mapper.convertValue(statsResponse.getBody(), ViewStatsDto[].class);
+                if (statsArray.length > 0) {
+                    return statsArray[0].getHits();
                 }
-            } else {
-                log.warn("Неуспешный ответ от statClient для события {}: {}", eventId, statsResponse.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Ошибка при получении статистики для события {}: {}", eventId, e.getMessage());
