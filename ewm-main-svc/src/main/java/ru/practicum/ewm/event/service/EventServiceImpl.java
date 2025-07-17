@@ -149,28 +149,32 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
-
+    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid,
+                                                     LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                     Boolean onlyAvailable, String sort, Integer from, Integer size,
+                                                     HttpServletRequest request) {
+        // Проверка, чтобы rangeStart был раньше rangeEnd
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
-
+        // Отправка статистики
         try {
             sendStats(request);
         } catch (Exception e) {
             log.error("Ошибка при отправке статистики:", e);
         }
+        // Получение количества запросов
         long newHits = getHits(request);
-
         LocalDateTime now = LocalDateTime.now();
+        // Установка rangeStart на текущее время, если он не задан
         if (rangeStart == null) {
             rangeStart = now;
         }
-
+        // Создание объекта Pageable для пагинации
         Pageable pageable = PageRequest.of(from, size);
-
+        // Выполнение запроса к репозиторию с использованием заданных параметров
         Page<Event> eventPage = eventRepository.findAllByPublic(
-                text.toLowerCase(),
+                text != null ? text.toLowerCase() : null,
                 categories,
                 paid,
                 rangeStart,
@@ -181,23 +185,24 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventPage.getContent();
 
+        // Преобразование событий в DTO
         List<EventShortDto> eventShortDtos = events.stream()
                 .map(event -> {
                     EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
                     eventShortDto.setViews(newHits);
                     eventShortDto.setConfirmedRequests(eventRequestRepository
-                            .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED)); // Получение одобренных заявок
+                            .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
                     return eventShortDto;
                 })
                 .collect(Collectors.toList());
 
-
+        // Сортировка по заданному критерию
         if ("VIEWS".equalsIgnoreCase(sort)) {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
         } else {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
         }
-        return eventShortDtos;
+        return eventShortDtos; // Возврат результата
     }
 
     @Override
