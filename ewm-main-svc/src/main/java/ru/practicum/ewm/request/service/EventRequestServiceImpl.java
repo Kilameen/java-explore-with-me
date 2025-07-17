@@ -153,7 +153,7 @@ public class EventRequestServiceImpl implements EventRequestService {
         RequestStatus targetStatus = RequestStatus.valueOf(String.valueOf(dto.getStatus()));
 
         int limit = event.getParticipantLimit();
-        int confirmed = eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+        long confirmed = eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
 
         if (targetStatus == RequestStatus.CONFIRMED) {
             if (limit != 0 && confirmed >= limit) {

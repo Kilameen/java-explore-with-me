@@ -13,7 +13,7 @@ public interface EventRequestRepository extends JpaRepository<EventRequest, Long
 
     List<EventRequest> findByRequesterId(Long userId);
 
-    int countByEventIdAndStatus(Long eventId, RequestStatus status);
+    long countByEventIdAndStatus(Long eventId, RequestStatus status);
 
     List<EventRequest> findByEvent(Event event);
 

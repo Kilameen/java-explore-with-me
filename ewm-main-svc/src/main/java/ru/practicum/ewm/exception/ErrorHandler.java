@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -21,6 +22,18 @@ public class ErrorHandler {
         return new ErrorResponse("BAD_REQUEST", ex.getMessage());
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        return new ErrorResponse("Ошибка валидации: ", e.getMessage());
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handlerValidationException(ValidationException e) {
+        return new ErrorResponse("BAD_REQUEST", e.getMessage());
+    }
+
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(NOT_FOUND)
     public ErrorResponse handleNotFoundException(NotFoundException ex) {
@@ -28,10 +41,17 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(DuplicatedDataException.class)
-    @ResponseStatus(HttpStatus.CONFLICT) // Устанавливаем код ответа 409 Conflict
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDuplicatedDataException(DuplicatedDataException ex) {
-        log.warn("DuplicatedDataException: {}", ex.getMessage()); // Логируем исключение
-        return new ErrorResponse("CONFLICT", ex.getMessage()); // Возвращаем тело ответа с информацией об ошибке
+        log.warn("DuplicatedDataException: {}", ex.getMessage());
+        return new ErrorResponse("CONFLICT", ex.getMessage());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflictException(ConflictException ex) {
+        log.warn("ConflictException: {}", ex.getMessage());
+        return new ErrorResponse("CONFLICT", ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -63,7 +83,7 @@ public class ErrorHandler {
         } else {
             errorMessage += "Сообщение отсутствует.";
         }
-        return new ErrorResponse("INTERNAL_SERVER_ERROR",errorMessage);
+        return new ErrorResponse("INTERNAL_SERVER_ERROR", errorMessage);
     }
 
     @ExceptionHandler
