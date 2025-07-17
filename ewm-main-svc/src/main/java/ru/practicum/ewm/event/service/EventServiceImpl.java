@@ -149,60 +149,39 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid,
-                                                     LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                                     Boolean onlyAvailable, String sort, Integer from, Integer size,
-                                                     HttpServletRequest request) {
-        // Проверка, чтобы rangeStart был раньше rangeEnd
+    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
+
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
-        // Отправка статистики
-        try {
-            sendStats(request);
-        } catch (Exception e) {
-            log.error("Ошибка при отправке статистики:", e);
+
+        if (sort != null && !sort.equalsIgnoreCase("EVENT_DATE") && !sort.equalsIgnoreCase("VIEWS")) {
+            throw new IllegalArgumentException("Unknown sort type");
         }
-        // Получение количества запросов
-        long newHits = getHits(request);
-        LocalDateTime now = LocalDateTime.now();
-        // Установка rangeStart на текущее время, если он не задан
-        if (rangeStart == null) {
-            rangeStart = now;
-        }
-        // Создание объекта Pageable для пагинации
+
+        sendStats(request);
+
         Pageable pageable = PageRequest.of(from, size);
-        // Выполнение запроса к репозиторию с использованием заданных параметров
-        Page<Event> eventPage = eventRepository.findAllByPublic(
-                text != null ? text.toLowerCase() : null,
-                categories,
-                paid,
-                rangeStart,
-                rangeEnd,
-                onlyAvailable,
-                pageable
-        );
+        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
 
-        List<Event> events = eventPage.getContent();
-
-        // Преобразование событий в DTO
-        List<EventShortDto> eventShortDtos = events.stream()
+        List<EventShortDto> eventShortDtos = eventPage.getContent().stream()
                 .map(event -> {
-                    EventShortDto eventShortDto = eventMapper.toEventShortDto(event);
-                    eventShortDto.setViews(newHits);
-                    eventShortDto.setConfirmedRequests(eventRequestRepository
-                            .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
-                    return eventShortDto;
+                    EventShortDto eventDto = eventMapper.toEventShortDto(event);
+                    eventDto.setViews(getViews(event.getId(), event.getCreatedOn(), request));
+                    return eventDto;
                 })
                 .collect(Collectors.toList());
 
-        // Сортировка по заданному критерию
-        if ("VIEWS".equalsIgnoreCase(sort)) {
-            eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
-        } else {
-            eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+        if (sort != null) {
+            if (sort.equalsIgnoreCase("EVENT_DATE")) {
+                eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+
+            } else if (sort.equalsIgnoreCase("VIEWS")) {
+                eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
+            }
         }
-        return eventShortDtos; // Возврат результата
+
+        return eventShortDtos;
     }
 
     @Override
