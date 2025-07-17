@@ -73,19 +73,6 @@ public class ErrorHandler {
         return new ErrorResponse("CONFLICT", "Нарушение уникальности данных: " + ex.getMessage());
     }
 
-    @ExceptionHandler(Throwable.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handlerValidationException(Throwable e) {
-        String errorMessage = "Произошла внутренняя ошибка сервера: ";
-        errorMessage += "Тип исключения - " + e.getClass().getSimpleName() + ". ";
-        if (e.getMessage() != null && !e.getMessage().isEmpty()) {
-            errorMessage += "Сообщение: " + e.getMessage();
-        } else {
-            errorMessage += "Сообщение отсутствует.";
-        }
-        return new ErrorResponse("INTERNAL_SERVER_ERROR", errorMessage);
-    }
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiError handleConflict(final ForbiddenException e) {
