@@ -32,21 +32,21 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     );
 
     @Query("""
-        SELECT e FROM Event e
-        WHERE e.state = 'PUBLISHED'
-        AND (:text IS NULL OR lower(e.annotation) LIKE %:text% OR lower(e.description) LIKE %:text%)
-        AND (:categories IS NULL OR e.category.id IN :categories)
-        AND (:paid IS NULL OR e.paid = :paid)
-        AND ((:rangeStart IS NULL AND :rangeEnd IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR (e.eventDate BETWEEN :rangeStart AND :rangeEnd))
-        AND (:onlyAvailable = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
-    """)
-    Page<Event> findAllByPublic( @Param("text") String text,
-                                 @Param("categories") List<Long> categories,
-                                 @Param("paid") Boolean paid,
-                                 @Param("rangeStart") LocalDateTime rangeStart,
-                                 @Param("rangeEnd") LocalDateTime rangeEnd,
-                                 @Param("onlyAvailable") Boolean onlyAvailable,
-                                 Pageable pageable);
+                SELECT e FROM Event e
+                WHERE e.state = 'PUBLISHED'
+                AND (:text IS NULL OR lower(e.annotation) LIKE %:text% OR lower(e.description) LIKE %:text%)
+                AND (:categories IS NULL OR e.category.id IN :categories)
+                AND (:paid IS NULL OR e.paid = :paid)
+                AND ((:rangeStart IS NULL AND :rangeEnd IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR (e.eventDate BETWEEN :rangeStart AND :rangeEnd))
+                AND (:onlyAvailable = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
+            """)
+    Page<Event> findAllByPublic(@Param("text") String text,
+                                @Param("categories") List<Long> categories,
+                                @Param("paid") Boolean paid,
+                                @Param("rangeStart") LocalDateTime rangeStart,
+                                @Param("rangeEnd") LocalDateTime rangeEnd,
+                                @Param("onlyAvailable") Boolean onlyAvailable,
+                                Pageable pageable);
 
     List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
 
