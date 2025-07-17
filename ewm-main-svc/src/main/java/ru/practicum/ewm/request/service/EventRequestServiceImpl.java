@@ -102,7 +102,6 @@ public class EventRequestServiceImpl implements EventRequestService {
     }
 
     @Override
-
     public List<ParticipationRequestDto> getParticipationRequests(Long userId) {
         log.info("Получение запросов пользователя: userId = {}", userId);
 
@@ -115,7 +114,6 @@ public class EventRequestServiceImpl implements EventRequestService {
     }
 
     @Override
-
     public List<ParticipationRequestDto> getParticipationRequestsForUserEvent(Long userId, Long eventId) {
         log.info("Получение заявок на своё событие: userId = {}, eventId = {}", userId, eventId);
 

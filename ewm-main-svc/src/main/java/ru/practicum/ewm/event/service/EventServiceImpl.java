@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.ewm.category.CategoryRepository;
 import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.category.model.Category;
@@ -193,14 +192,9 @@ public class EventServiceImpl implements EventService {
 
             return eventShortDtos;
 
-        } catch (IllegalArgumentException e) {
-            log.warn("Некорректные аргументы запроса: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-        }
-        catch (Exception e) {
-            log.error("Произошла ошибка при выполнении запроса: {}", e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Произошла ошибка при выполнении запроса.", e);
-
+        } catch (Exception e) {
+            log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e);
+            return Collections.emptyList();
         }
     }
 
