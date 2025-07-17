@@ -194,7 +194,7 @@ public class EventServiceImpl implements EventService {
 
         } catch (Exception e) {
             log.error("Ошибка в findAllByPublic: {}", e.getMessage(), e);
-            return Collections.emptyList();
+            throw new RuntimeException("Ошибка при выполнении запроса.", e);
         }
     }
 
