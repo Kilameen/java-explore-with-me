@@ -2,10 +2,15 @@ package ru.practicum.stat.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class ErrorResponse {
-    private final String error;
-    private final String message;
+    private String status;
+    private String message;
+    private LocalDateTime timestamp;
 }
