@@ -156,14 +156,23 @@ public class EventServiceImpl implements EventService {
                 throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
             }
 
-            sendStats(request);
-            long newHits = getHits(request);
-
+            try {
+                sendStats(request);
+            } catch (Exception e) {
+                log.error("Ошибка при отправке статистики:", e);//Логируем полное исключение
+            }
+            long newHits = DEFAULT_VIEWS;
+            try {
+                newHits = getHits(request);
+            } catch (Exception e) {
+                log.error("Ошибка при получении статистики:", e);//Логируем полное исключение
+            }
             Pageable pageable = PageRequest.of(from, size);
 
             Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
             List<Event> events = (eventPage != null) ? eventPage.getContent() : Collections.emptyList();
 
+            long finalNewHits = newHits;
             List<EventShortDto> eventShortDtos = events.stream()
                     .filter(Objects::nonNull)
                     .map(event -> {
@@ -172,7 +181,7 @@ public class EventServiceImpl implements EventService {
                             log.warn("Mapper вернул null для события id={}", event.getId());
                             return null;
                         }
-                        eventShortDto.setViews(newHits);
+                        eventShortDto.setViews(finalNewHits);
                         try {
                             eventShortDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
                         } catch (Exception e) {
