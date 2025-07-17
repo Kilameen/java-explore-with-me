@@ -43,7 +43,7 @@ public class Event {
 
     @Column(length = 7000)
     String description;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
     @Column(name = "event_date")
     LocalDateTime eventDate;
 
@@ -55,10 +55,10 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     EventState state;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
     @Column(name = "created_on")
     LocalDateTime createdOn;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
     @Column(name = "published_on")
     LocalDateTime publishedOn;
     long views;
