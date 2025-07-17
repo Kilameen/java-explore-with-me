@@ -155,49 +155,27 @@ public class EventServiceImpl implements EventService {
                                                      Integer from, Integer size,
                                                      HttpServletRequest request) {
 
-        // Проверка временных параметров на корректность
+        // Проверка корректности временных параметров
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
 
-        // Проверка на допустимый тип сортировки
+        // Проверка на допустимость типа сортировки
         if (sort != null && !List.of("EVENT_DATE", "VIEWS").contains(sort.toUpperCase())) {
             throw new IncorrectRequestException("Unknown sort type");
         }
 
-        // Отправка статистики о запросе
+        // Отправка статистики
         sendStats(request);
 
         // Получение списка событий из репозитория с пагинацией
-        Pageable pageable = PageRequest.of(from / size, size);
-        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, onlyAvailable, pageable);
+        Pageable pageable = PageRequest.of(from, size);
+        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid,
+                rangeStart, rangeEnd,
+                onlyAvailable, pageable);
 
-        List<Event> events = eventPage.getContent();
-
-        // Фильтрация по датам
-        if (rangeStart != null) {
-            LocalDateTime finalRangeStart = rangeStart;
-            events = events.stream()
-                    .filter(event -> event.getEventDate().isAfter(finalRangeStart))
-                    .collect(Collectors.toList());
-        }
-
-        if (rangeEnd != null) {
-            LocalDateTime finalRangeEnd = rangeEnd;
-            events = events.stream()
-                    .filter(event -> event.getEventDate().isBefore(finalRangeEnd))
-                    .collect(Collectors.toList());
-        }
-
-
-        // Фильтрация по доступности
-        if (onlyAvailable != null && onlyAvailable) {
-            events = events.stream()
-                    .filter(event -> event.getParticipantLimit() == 0 || event.getConfirmedRequests() < event.getParticipantLimit())
-                    .collect(Collectors.toList());
-        }
-
-        List<EventShortDto> eventShortDtos = events.stream()
+        // Преобразование событий в DTO и установка количества просмотров
+        List<EventShortDto> eventShortDtos = eventPage.getContent().stream()
                 .map(event -> {
                     EventShortDto eventDto = eventMapper.toEventShortDto(event);
                     eventDto.setViews(getViews(event.getId(), event.getCreatedOn(), request));
@@ -212,7 +190,7 @@ public class EventServiceImpl implements EventService {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
         }
 
-        return eventShortDtos;
+        return eventShortDtos; // Возвращаем список DTO
     }
 
     @Override
@@ -378,15 +356,34 @@ public class EventServiceImpl implements EventService {
     private Long getViews(Long eventId, LocalDateTime createdOn, HttpServletRequest request) {
         LocalDateTime end = LocalDateTime.now();
         String uri = request.getRequestURI();
+        Boolean unique = true;
         Long defaultViews = DEFAULT_VIEWS;
 
         try {
-            ResponseEntity<Object> statsResponse = statClient.getStats(createdOn, end, List.of(uri), true);
+            ResponseEntity<Object> statsResponse = statClient.getStats(createdOn, end, List.of(uri), unique);
+            log.info("Запрос к statClient: URI={}, from={}, to={}, unique={}", uri, createdOn, end, unique);
+            log.info("Ответ от statClient: status={}, body={}", statsResponse.getStatusCode(), statsResponse.getBody());
             if (statsResponse.getStatusCode().is2xxSuccessful() && statsResponse.hasBody()) {
-                ViewStatsDto[] statsArray = mapper.convertValue(statsResponse.getBody(), ViewStatsDto[].class);
-                if (statsArray.length > 0) {
-                    return statsArray[0].getHits();
+                Object body = statsResponse.getBody();
+                if (body != null) {
+                    try {
+                        ViewStatsDto[] statsArray = mapper.convertValue(body, ViewStatsDto[].class);
+                        List<ViewStatsDto> stats = Arrays.asList(statsArray);
+
+                        if (!stats.isEmpty()) {
+                            return stats.getLast().getHits();
+                        } else {
+                            log.info("Нет данных статистики для события {}", eventId);
+                        }
+                    } catch (Exception e) {
+                        log.error("Ошибка преобразования данных статистики для события {}: {}", eventId, e.getMessage());
+                        return defaultViews;
+                    }
+                } else {
+                    log.warn("Тело ответа от statClient пустое для события {}", eventId);
                 }
+            } else {
+                log.warn("Неуспешный ответ от statClient для события {}: {}", eventId, statsResponse.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Ошибка при получении статистики для события {}: {}", eventId, e.getMessage());
