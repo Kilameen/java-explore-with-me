@@ -149,21 +149,32 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request) {
+    public Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid,
+                                                     LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                     Boolean onlyAvailable, String sort,
+                                                     Integer from, Integer size,
+                                                     HttpServletRequest request) {
 
+        // Проверка корректности временных параметров
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
 
-        if (sort != null && !sort.equalsIgnoreCase("EVENT_DATE") && !sort.equalsIgnoreCase("VIEWS")) {
-            throw new IllegalArgumentException("Unknown sort type");
+        // Проверка на допустимость типа сортировки
+        if (sort != null && !List.of("EVENT_DATE", "VIEWS").contains(sort.toUpperCase())) {
+            throw new IncorrectRequestException("Unknown sort type");
         }
 
+        // Отправка статистики
         sendStats(request);
 
+        // Получение списка событий из репозитория с пагинацией
         Pageable pageable = PageRequest.of(from, size);
-        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
+        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid,
+                rangeStart, rangeEnd,
+                onlyAvailable, pageable);
 
+        // Преобразование событий в DTO и установка количества просмотров
         List<EventShortDto> eventShortDtos = eventPage.getContent().stream()
                 .map(event -> {
                     EventShortDto eventDto = eventMapper.toEventShortDto(event);
@@ -172,16 +183,14 @@ public class EventServiceImpl implements EventService {
                 })
                 .collect(Collectors.toList());
 
-        if (sort != null) {
-            if (sort.equalsIgnoreCase("EVENT_DATE")) {
-                eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
-
-            } else if (sort.equalsIgnoreCase("VIEWS")) {
-                eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
-            }
+        // Сортировка по заданному критерию
+        if ("EVENT_DATE".equalsIgnoreCase(sort)) {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
+        } else if ("VIEWS".equalsIgnoreCase(sort)) {
+            eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
         }
 
-        return eventShortDtos;
+        return eventShortDtos; // Возвращаем список DTO
     }
 
     @Override
