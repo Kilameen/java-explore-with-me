@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>ewm-main-svc</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>22</maven.compiler.source>
