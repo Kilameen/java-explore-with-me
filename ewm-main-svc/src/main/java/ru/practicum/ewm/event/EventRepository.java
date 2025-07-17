@@ -31,21 +31,21 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     );
 
     @Query("""
-            SELECT e
-            FROM Event e
-            WHERE e.state = 'PUBLISHED'
-              AND (COALESCE(?1, '') = '' OR lower(e.annotation) LIKE lower(concat('%', ?1, '%')) OR lower(e.description) LIKE lower(concat('%', ?1, '%')))
-              AND (?2 IS NULL OR e.category.id IN ?2)
-              AND (?3 IS NULL OR e.paid = ?3)
-              AND (
-                (?4 IS NULL AND ?5 IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR
-                (e.eventDate BETWEEN COALESCE(?4, e.eventDate) AND COALESCE(?5, e.eventDate))
-              )
-              AND (?6 = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
-            """)
+    SELECT e
+    FROM Event e
+    WHERE e.state = 'PUBLISHED'
+    AND (?1 IS NULL OR lower(e.annotation) LIKE lower(concat('%', ?1, '%')) OR lower(e.description) LIKE lower(concat('%', ?1, '%')))
+    AND (?2 IS NULL OR e.category.id IN ?2)
+    AND ((?3 IS NULL AND (e.paid = true OR e.paid = false)) OR e.paid = ?3)
+    AND (
+        (?4 IS NULL AND ?5 IS NULL AND e.eventDate >= CURRENT_TIMESTAMP) OR
+        (e.eventDate BETWEEN COALESCE(?4, e.eventDate) AND COALESCE(?5, e.eventDate))
+    )
+    AND (?6 = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
+""")
     Page<Event> findAllByPublic(
             String text,
-            List<?> categories,
+            List<Long> categories,
             Boolean paid,
             LocalDateTime rangeStart,
             LocalDateTime rangeEnd,
