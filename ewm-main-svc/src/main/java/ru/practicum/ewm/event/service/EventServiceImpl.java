@@ -166,12 +166,12 @@ public class EventServiceImpl implements EventService {
             throw new IncorrectRequestException("Unknown sort type");
         }
 
-        Pageable pageable = PageRequest.of(from / size, size); // Пагинация
+        Pageable pageable = PageRequest.of(from / size, size);
         Specification<Event> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(criteriaBuilder.equal(root.get("state"), "PUBLISHED")); // Только опубликованные
 
-            if (text != null) { // Поиск по тексту
+            if (text != null) {
                 predicates.add(criteriaBuilder.or(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")), "%" + text.toLowerCase() + "%"),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + text.toLowerCase() + "%")
@@ -179,23 +179,23 @@ public class EventServiceImpl implements EventService {
             }
 
             if (categories != null && !categories.isEmpty()) {
-                predicates.add(root.get("category").get("id").in(categories)); // Фильтр по категориям
+                predicates.add(root.get("category").get("id").in(categories));
             }
 
             if (paid != null) {
-                predicates.add(criteriaBuilder.equal(root.get("paid"), paid)); // Фильтр по платности
+                predicates.add(criteriaBuilder.equal(root.get("paid"), paid));
             }
 
             if (rangeStart == null && rangeEnd == null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), LocalDateTime.now())); // Без диапазона - после текущей даты
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), LocalDateTime.now()));
             } else {
-                predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, rangeEnd)); // Фильтр по диапазону
+                predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, rangeEnd));
             }
 
             if (onlyAvailable) {
                 predicates.add(criteriaBuilder.or(
                         criteriaBuilder.equal(root.get("participantLimit"), 0),
-                        criteriaBuilder.greaterThan(root.get("participantLimit"), root.get("confirmedRequests")) // Только доступные
+                        criteriaBuilder.greaterThan(root.get("participantLimit"), root.get("confirmedRequests"))
                 ));
             }
 
@@ -251,7 +251,7 @@ public class EventServiceImpl implements EventService {
     public Collection<EventFullDto> findAllByAdmin(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size, HttpServletRequest request) {
 
         long newHits = getHits(request);
-        Pageable pageable = PageRequest.of(from, size);
+        Pageable pageable = PageRequest.of(from / size, size);
 
         List<Event> eventList;
         try {

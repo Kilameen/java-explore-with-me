@@ -35,11 +35,10 @@ public class StatisticsServiceImpl implements StatisticsService {
         return EndpointHitMapper.toEndpointHitDto(createdHit);
     }
 
-
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         log.info("Получение статистики с start={}, end={}, uris={}, unique={}", start, end, uris, unique);
-        // Валидация: Проверяем, что start не позже end.
+
         if (start != null && end != null && start.isAfter(end)) {
             log.warn("Некорректный запрос: start={} позже end={}", start, end);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must be before end date");
