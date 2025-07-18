@@ -1,17 +1,48 @@
 services:
-  stat-server:
+  stats-server:
     build:
-      context: ./stat-svc/stat-server
-    image: stat-server
-    container_name: stat-server
+      context: ./stat-svc/stats-server
+    image: stats-server
+    container_name: stats-server
     ports:
       - "9090:9090"
     depends_on:
-      - statdb
+      statdb:
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://statdb:5432/statdb
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
+      - STATS_SERVER_URL=http://stats-server:9090
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  ewm-service:
+    build:
+      context: ./ewm-main-svc
+    image: ewm-service
+    container_name: ewm-service
+    ports:
+      - "8080:8080"
+    environment:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://ewmdb:5432/ewmdb
+          SPRING_DATASOURCE_USERNAME: admin
+          SPRING_DATASOURCE_PASSWORD: admin
+          SPRING_PROFILES_ACTIVE: postgres
+          STATS_SERVER_URL: http://stats-server:9090
+    depends_on:
+          ewmdb:
+            condition: service_healthy
+          stats-server:
+            condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   statdb:
     image: postgres:16.1
@@ -23,37 +54,24 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_DB=statdb
     healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 5s
-      retries: 10
+      test: [ "CMD-SHELL", "pg_isready -U admin -d statdb" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
-  ewm-service:
-    build:
-      context: ./ewm-main-svc
-    image: ewm-service
-    container_name: ewm-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm-db
-      SPRING_DATASOURCE_USERNAME: admin
-      SPRING_DATASOURCE_PASSWORD: admin
-    ports:
-      - "8080:8080"
-    depends_on:
-      - stat-server
-      - ewm-db
-
-  ewm-db:
+  ewmdb:
     image: postgres:16.1
-    container_name: ewm-db
+    container_name: ewmdb
     ports:
       - "6542:5432"
     environment:
-      - POSTGRES_DB=ewm-db
+      - POSTGRES_DB=ewmdb
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 5s
-      retries: 10
+      test: [ "CMD-SHELL", "pg_isready -U admin -d ewmdb" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+

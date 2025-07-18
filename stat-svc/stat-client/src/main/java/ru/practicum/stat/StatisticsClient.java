@@ -23,19 +23,21 @@ public class StatisticsClient extends BaseClient {
     private final String appName;
 
     @Autowired
-    public StatisticsClient(@Value("${stat-server.url}") String serverUrl,
+    public StatisticsClient(@Value("${stats-server.url}") String serverUrl,
                             @Value("${app.name}") String appName,
                             RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                         .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
-                        .build()
+                        .build(),
+                serverUrl
         );
         this.appName = appName;
     }
 
     public ResponseEntity<Object> create(HttpServletRequest request) {
+
         EndpointHitCreateDto endpointHitCreateDto = EndpointHitCreateDto.builder()
                 .app(appName)
                 .uri(request.getRequestURI())
@@ -46,15 +48,18 @@ public class StatisticsClient extends BaseClient {
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/stats")
                 .queryParam("start", start.format(formatter))
                 .queryParam("end", end.format(formatter))
                 .queryParam("unique", unique);
 
         if (uris != null && !uris.isEmpty()) {
-            builder.queryParam("uris", String.join(",", uris));
+            builder.queryParam("uris", uris);
         }
-        String url = builder.toUriString();
+
+        String url = builder.build().toUriString();
+
         return get(url);
     }
 }
