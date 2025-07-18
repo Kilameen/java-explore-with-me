@@ -32,11 +32,14 @@ import ru.practicum.ewm.enums.RequestStatus;
 import ru.practicum.ewm.enums.StateAction;
 import ru.practicum.stat.StatisticsClient;
 import ru.practicum.stat.ViewStatsDto;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import jakarta.persistence.criteria.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -155,42 +158,70 @@ public class EventServiceImpl implements EventService {
                                                      Integer from, Integer size,
                                                      HttpServletRequest request) {
 
-        // Проверка корректности временных параметров
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new IllegalArgumentException("rangeStart должен быть раньше rangeEnd");
         }
 
-        // Проверка на допустимость типа сортировки
         if (sort != null && !List.of("EVENT_DATE", "VIEWS").contains(sort.toUpperCase())) {
             throw new IncorrectRequestException("Unknown sort type");
         }
 
-        // Отправка статистики
+        Pageable pageable = PageRequest.of(from / size, size); // Пагинация
+        Specification<Event> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(criteriaBuilder.equal(root.get("state"), "PUBLISHED")); // Только опубликованные
+
+            if (text != null) { // Поиск по тексту
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")), "%" + text.toLowerCase() + "%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + text.toLowerCase() + "%")
+                ));
+            }
+
+            if (categories != null && !categories.isEmpty()) {
+                predicates.add(root.get("category").get("id").in(categories)); // Фильтр по категориям
+            }
+
+            if (paid != null) {
+                predicates.add(criteriaBuilder.equal(root.get("paid"), paid)); // Фильтр по платности
+            }
+
+            if (rangeStart == null && rangeEnd == null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), LocalDateTime.now())); // Без диапазона - после текущей даты
+            } else {
+                predicates.add(criteriaBuilder.between(root.get("eventDate"), rangeStart, rangeEnd)); // Фильтр по диапазону
+            }
+
+            if (onlyAvailable) {
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.equal(root.get("participantLimit"), 0),
+                        criteriaBuilder.greaterThan(root.get("participantLimit"), root.get("confirmedRequests")) // Только доступные
+                ));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Event> eventPage = eventRepository.findAll(spec, pageable);
+
         sendStats(request);
 
-        // Получение списка событий из репозитория с пагинацией
-        Pageable pageable = PageRequest.of(from, size);
-        Page<Event> eventPage = eventRepository.findAllByPublic(text, categories, paid,
-                rangeStart, rangeEnd,
-                onlyAvailable, pageable);
-
-        // Преобразование событий в DTO и установка количества просмотров
         List<EventShortDto> eventShortDtos = eventPage.getContent().stream()
                 .map(event -> {
                     EventShortDto eventDto = eventMapper.toEventShortDto(event);
                     eventDto.setViews(getViews(event.getId(), event.getCreatedOn(), request));
+                    eventDto.setConfirmedRequests(eventDto.getConfirmedRequests());
                     return eventDto;
                 })
                 .collect(Collectors.toList());
 
-        // Сортировка по заданному критерию
         if ("EVENT_DATE".equalsIgnoreCase(sort)) {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getEventDate));
         } else if ("VIEWS".equalsIgnoreCase(sort)) {
             eventShortDtos.sort(Comparator.comparing(EventShortDto::getViews));
         }
 
-        return eventShortDtos; // Возвращаем список DTO
+        return eventShortDtos;
     }
 
     @Override

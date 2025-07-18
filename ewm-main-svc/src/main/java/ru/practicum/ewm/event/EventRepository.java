@@ -2,6 +2,7 @@ package ru.practicum.ewm.event;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.ewm.event.model.Event;
@@ -30,29 +31,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable
     );
 
-    @Query("""
-            SELECT e
-            FROM Event e
-            WHERE e.state = 'PUBLISHED'
-            AND (?1 IS NULL OR lower(e.annotation) LIKE lower(concat('%', ?1, '%')) OR lower(e.description) LIKE lower(concat('%', ?1, '%')))
-            AND (?2 IS NULL OR e.category.id IN ?2)
-            AND ((?3 IS NULL AND (e.paid = true OR e.paid = false)) OR e.paid = ?3)
-            AND (?6 = FALSE OR e.participantLimit = 0 OR e.confirmedRequests < e.participantLimit)
-            AND (
-                (?4 IS NULL AND ?5 IS NULL) OR
-                (e.eventDate BETWEEN ?4 AND ?5)
-            )
-            """)
-    Page<Event> findAllByPublic(
-            String text,
-            List categories,
-            Boolean paid,
-            LocalDateTime rangeStart,
-            LocalDateTime rangeEnd,
-            Boolean onlyAvailable,
-            Pageable pageable
-    );
-
     List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
 
     List<Event> findAllByIdIn(List<Long> eventIds);
@@ -61,4 +39,5 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Optional<Event> findByIdAndInitiatorId(Long eventId, Long userId);
 
+    Page<Event> findAll(Specification<Event> spec, Pageable pageable);
 }
