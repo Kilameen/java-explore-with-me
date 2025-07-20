@@ -21,6 +21,7 @@ public class EventMapper {
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.getRequestModeration())
                 .title(newEventDto.getTitle())
+                .state(EventState.PENDING)
                 .build();
     }
 
@@ -38,7 +39,7 @@ public class EventMapper {
                 .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn())
                 .requestModeration(event.getRequestModeration())
-                .state(EventState.PENDING)
+                .state(event.getState())
                 .title(event.getTitle())
                 .build();
     }

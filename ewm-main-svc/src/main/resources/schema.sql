@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS events (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
+
 CREATE TABLE IF NOT EXISTS compilations (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY UNIQUE,
     pinned BOOLEAN NOT NULL,
@@ -65,4 +66,3 @@ CREATE TABLE IF NOT EXISTS requests (
     FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT unique_request UNIQUE (event_id, requester_id)
 );
-

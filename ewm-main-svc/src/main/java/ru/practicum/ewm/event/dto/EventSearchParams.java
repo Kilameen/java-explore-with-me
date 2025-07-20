@@ -1,5 +1,7 @@
 package ru.practicum.ewm.event.dto;
 
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,8 +25,10 @@ public class EventSearchParams {
     LocalDateTime rangeEnd;
     Boolean onlyAvailable;
     String sort;
-    Integer from;
-    Integer size;
+    @PositiveOrZero
+    Integer from = 0;
+    @Positive
+    Integer size = 10;
     List<Long> users;
     List<EventState> states;
 }

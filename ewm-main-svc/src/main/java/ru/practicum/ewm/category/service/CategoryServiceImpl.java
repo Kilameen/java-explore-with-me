@@ -58,7 +58,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категория с ID " + catId + " не найдена!"));
 
-        String newName = updateCategoryDto.getName().trim().toLowerCase();
+        String newName = updateCategoryDto.getName().trim();
         category.setName(newName);
 
         categoryRepository.save(category);
