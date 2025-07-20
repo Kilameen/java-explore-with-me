@@ -2,11 +2,7 @@ package ru.practicum.ewm.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.ewm.event.dto.*;
-import ru.practicum.ewm.enums.EventState;
-
-import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
 
 public interface EventService {
     EventFullDto create(Long userId, NewEventDto newEventDto);
