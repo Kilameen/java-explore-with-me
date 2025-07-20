@@ -151,10 +151,11 @@ public class EventServiceImpl implements EventService {
             throw new IncorrectRequestException("Unknown sort type");
         }
 
-        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
+        Pageable pageable = PageRequest.of(params.getFrom(), params.getSize());
         Specification<Event> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(criteriaBuilder.equal(root.get("state"), "PUBLISHED")); // Только опубликованные
+            predicates.add(criteriaBuilder.equal(root.get("state"), EventState.PUBLISHED));
+
 
             if (params.getText() != null) {
                 predicates.add(criteriaBuilder.or(
@@ -177,7 +178,7 @@ public class EventServiceImpl implements EventService {
                 predicates.add(criteriaBuilder.between(root.get("eventDate"), params.getRangeStart(), params.getRangeEnd()));
             }
 
-            if (params.getOnlyAvailable()) {
+            if (Boolean.TRUE.equals(params.getOnlyAvailable())) {
                 predicates.add(criteriaBuilder.or(
                         criteriaBuilder.equal(root.get("participantLimit"), 0),
                         criteriaBuilder.greaterThan(root.get("participantLimit"), root.get("confirmedRequests"))
@@ -236,7 +237,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public Collection<EventFullDto> findAllByAdmin(EventSearchParams params, HttpServletRequest request) {
 
-        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
+        Pageable pageable = PageRequest.of(params.getFrom(), params.getSize());
 
         List<Event> eventList;
         try {

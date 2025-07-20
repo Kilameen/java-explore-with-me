@@ -26,9 +26,9 @@ public class EventSearchParams {
     Boolean onlyAvailable;
     String sort;
     @PositiveOrZero
-    Integer from = 0;
+    int from = 0;
     @Positive
-    Integer size = 10;
+    int size = 10;
     List<Long> users;
     List<EventState> states;
 }
