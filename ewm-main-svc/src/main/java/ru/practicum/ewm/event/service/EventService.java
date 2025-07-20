@@ -17,13 +17,11 @@ public interface EventService {
 
     EventFullDto getEventOfUser(Long userId, Long eventId);
 
-    Collection<EventShortDto> findAllByPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request);
+    Collection<EventShortDto> findAllByPublic(EventSearchParams params, HttpServletRequest request);
 
-    Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size,HttpServletRequest request);
+    Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size, HttpServletRequest request);
 
-
-
-    Collection<EventFullDto> findAllByAdmin(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size, HttpServletRequest request);
+    Collection<EventFullDto> findAllByAdmin(EventSearchParams params, HttpServletRequest request);
 
     EventFullDto findEventById(Long eventId, HttpServletRequest request);
 

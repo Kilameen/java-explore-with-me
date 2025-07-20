@@ -1,12 +1,10 @@
 package ru.practicum.ewm.request.mapper;
 
-import org.springframework.stereotype.Component;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import ru.practicum.ewm.request.model.EventRequest;
 
-@Component
 public class EventRequestMapper {
-    public ParticipationRequestDto toRequestDto(EventRequest request) {
+    public static ParticipationRequestDto toRequestDto(EventRequest request) {
         if (request == null) {
             return null;
         }

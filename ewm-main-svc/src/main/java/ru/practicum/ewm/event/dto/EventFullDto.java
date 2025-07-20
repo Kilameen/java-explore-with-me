@@ -33,6 +33,8 @@ public class EventFullDto {
     LocalDateTime publishedOn;
     UserShortDto initiator;
     CategoryDto category;
-    long views;
-    long confirmedRequests;
+    @Builder.Default
+    long views = 0L;
+    @Builder.Default
+    long confirmedRequests = 0L;
 }

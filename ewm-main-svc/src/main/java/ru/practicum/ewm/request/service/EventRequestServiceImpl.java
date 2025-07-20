@@ -38,7 +38,6 @@ public class EventRequestServiceImpl implements EventRequestService {
     UserRepository userRepository;
     EventRepository eventRepository;
     EventRequestRepository eventRequestRepository;
-    EventRequestMapper eventRequestMapper;
 
     @Override
     public ParticipationRequestDto create(Long userId, Long eventId) {
@@ -79,7 +78,7 @@ public class EventRequestServiceImpl implements EventRequestService {
 
         EventRequest savedRequest = eventRequestRepository.save(request);
         log.info("Создан запрос на участие с ID: {}", savedRequest.getId());
-        return eventRequestMapper.toRequestDto(savedRequest);
+        return EventRequestMapper.toRequestDto(savedRequest);
     }
 
     @Override
@@ -98,7 +97,7 @@ public class EventRequestServiceImpl implements EventRequestService {
 
         request.setStatus(RequestStatus.CANCELED);
         EventRequest savedRequest = eventRequestRepository.save(request);
-        return eventRequestMapper.toRequestDto(savedRequest);
+        return EventRequestMapper.toRequestDto(savedRequest);
     }
 
     @Override
@@ -109,7 +108,7 @@ public class EventRequestServiceImpl implements EventRequestService {
                 .orElseThrow(() -> new NotFoundException("Пользователь c ID " + userId + " не найден"));
 
         return eventRequestRepository.findByRequesterId(userId).stream()
-                .map(eventRequestMapper::toRequestDto)
+                .map(EventRequestMapper::toRequestDto)
                 .collect(Collectors.toList());
     }
 
@@ -124,7 +123,7 @@ public class EventRequestServiceImpl implements EventRequestService {
                 .orElseThrow(() -> new ForbiddenException("Пользователь не инициатор события."));
 
         return eventRequestRepository.findByEvent(event).stream()
-                .map(eventRequestMapper::toRequestDto)
+                .map(EventRequestMapper::toRequestDto)
                 .collect(Collectors.toList());
     }
 
@@ -166,7 +165,7 @@ public class EventRequestServiceImpl implements EventRequestService {
                     throw new ConflictException("Изменять можно только заявки в статусе PENDING.");
                 }
                 request.setStatus(RequestStatus.CONFIRMED);
-                result.getConfirmedRequests().add(eventRequestMapper.toRequestDto(request));
+                result.getConfirmedRequests().add(EventRequestMapper.toRequestDto(request));
                 confirmed++;
                 if (confirmed == limit) {
                     break;
@@ -182,7 +181,7 @@ public class EventRequestServiceImpl implements EventRequestService {
                     throw new ConflictException("Изменять можно только заявки в статусе PENDING.");
                 }
                 request.setStatus(RequestStatus.REJECTED);
-                result.getRejectedRequests().add(eventRequestMapper.toRequestDto(request));
+                result.getRejectedRequests().add(EventRequestMapper.toRequestDto(request));
             }
         }
 

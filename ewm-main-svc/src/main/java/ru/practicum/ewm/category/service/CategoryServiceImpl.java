@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     CategoryRepository categoryRepository;
-    CategoryMapper categoryMapper;
     EventRepository eventRepository;
 
     @Override
@@ -39,10 +38,10 @@ public class CategoryServiceImpl implements CategoryService {
         if (categoryRepository.existsByName(newCategoryDto.getName())) {
             throw new DuplicatedDataException("Название категории уже зарегистрировано: " + newCategoryDto.getName());
         }
-        Category category = categoryMapper.toNewCategoryFromDto(newCategoryDto);
+        Category category = CategoryMapper.toNewCategoryFromDto(newCategoryDto);
         Category createdCategory = categoryRepository.save(category);
         log.info("Категория успешно создана с ID: {}", createdCategory.getId());
-        return categoryMapper.toCategoryDto(createdCategory);
+        return CategoryMapper.toCategoryDto(createdCategory);
     }
 
     @Override
@@ -58,18 +57,13 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Попытка обновить категорию с ID: {}", catId);
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категория с ID " + catId + " не найдена!"));
-        String newName = updateCategoryDto.getName().trim().toLowerCase();
-        String oldName = category.getName().trim().toLowerCase();
 
-        if (!oldName.equals(newName) && categoryRepository.existsByName(newName)) {
-            throw new DuplicatedDataException("Название категории уже зарегистрировано:");
-        }
-        category.setName(updateCategoryDto.getName());
-        log.info("Имя категории с ID {} изменено с '{}' на '{}'", catId, oldName, newName);
+        String newName = updateCategoryDto.getName().trim().toLowerCase();
+        category.setName(newName);
+
         categoryRepository.save(category);
         log.info("Категория с ID {} успешно обновлена.", catId);
-        return categoryMapper.toCategoryDto(category);
-
+        return CategoryMapper.toCategoryDto(category);
     }
 
     @Override
@@ -77,15 +71,14 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto getCategoryById(Long catId) {
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категория с ID " + catId + " не найдена!"));
-        return categoryMapper.toCategoryDto(category);
+        return CategoryMapper.toCategoryDto(category);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CategoryDto> getAllCategories(int from, int size) {
-        int page = from > 0 ? from / size : 0;
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(from / size, size);
         return categoryRepository.findAll(pageable)
-                .stream().map(categoryMapper::toCategoryDto).collect(Collectors.toList());
+                .stream().map(CategoryMapper::toCategoryDto).collect(Collectors.toList());
     }
 }
