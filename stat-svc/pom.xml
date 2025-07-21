@@ -10,12 +10,14 @@
     </parent>
 
     <artifactId>stat-svc</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+
 
     <modules>
         <module>stat-client</module>
         <module>stat-dto</module>
-        <module>stat-server</module>
+        <module>stats-server</module>
     </modules>
 
     <properties>
