@@ -11,6 +11,7 @@ public class UserMapper {
         return User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
+                .allowSubscriptions(true)
                 .build();
     }
 
@@ -19,6 +20,7 @@ public class UserMapper {
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .allowSubscriptions(user.isAllowSubscriptions())
                 .build();
     }
 
