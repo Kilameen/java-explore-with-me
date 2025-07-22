@@ -14,17 +14,15 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 201\", () => {\r",
+							"pm.test(\"Статус код должен быть 201\", () => {\r",
 							"    pm.response.to.have.status(201);\r",
 							"});\r",
 							"\r",
-							"// Проверяем что ответ пришел в виде json\r",
 							"pm.test(\"Content-Type is application/json\", () => {\r",
 							"    pm.response.to.have.header(\"Content-Type\", \"application/json\");\r",
 							"});\r",
 							"\r",
-							"// Дополнительные проверки тела ответа\r",
-							"pm.test(\"Response has id\", () => {\r",
+							"pm.test(\"Ответ с id\", () => {\r",
 							"    const responseJson = pm.response.json();\r",
 							"    pm.expect(responseJson).to.have.property(\"id\");\r",
 							"});"
@@ -96,13 +94,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseUrl}}/users/{{userId}}/subscriptions",
+					"raw": "{{baseUrl}}/users/2/subscriptions",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"users",
-						"{{userId}}",
+						"2",
 						"subscriptions"
 					]
 				}
@@ -110,10 +108,157 @@
 			"response": []
 		},
 		{
-			"name": "Получение всех подписчиков пользователя",
+			"name": "Получение всех событий на подписанного пользователя",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const userId = pm.environment.get(\"userId\");\r",
+							"pm.environment.set(\"userId\", \"1\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"\r",
+							"pm.test(\"Статус код должен быть 200\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Ответ должен быть в формате is JSON array\", () => {\r",
+							"    pm.response.to.be.json;\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(Array.isArray(response)).to.be.true;\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/users/2/subscriptions/events",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						"2",
+						"subscriptions",
+						"events"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Получение количества подписчиков пользователя",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const userId = pm.environment.get(\"userId\");\r",
+							"pm.environment.set(\"userId\", \"2\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус код должен быть 200\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Количество подписчиков у вас \", () => {\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(typeof response).to.equal('number');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/users/1/subscriptions/subscribers/count",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						"1",
+						"subscriptions",
+						"subscribers",
+						"count"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Получить данные всех подписчиков",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const userId = pm.environment.get(\"userId\");\r",
+							"pm.environment.set(\"userId\", \"1\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус код должен быть 200\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"ответ должен быть в формате JSON array\", () => {\r",
+							"    pm.response.to.be.json;\r",
+							"    const response = pm.response.json();\r",
+							"    pm.expect(Array.isArray(response)).to.be.true;\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/users/1/subscriptions/subscribers",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						"1",
+						"subscriptions",
+						"subscribers"
+					]
+				}
 			},
 			"response": []
 		},
@@ -124,32 +269,18 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"// Pre-request Script: Подготовка к запросу, получение и проверка данных.\r",
 							"\r",
-							"// 1. Получение и логирование userId из переменных коллекции.\r",
-							"//    Важно убедиться, что userId задан и доступен.\r",
-							"console.log(\"userId из коллекции:\", pm.collectionVariables.get(\"uid\"));\r",
 							"const userId = pm.collectionVariables.get(\"userId\");\r",
-							"pm.environment.set(\"userId\", userId); // Сохраняем в переменные окружения.\r",
+							"pm.environment.set(\"userId\", userId); \r",
 							"\r",
-							"// 2. Получение и логирование ownerId из переменных коллекции.\r",
-							"//    Также проверяем наличие ownerId и сохраняем в окружение.\r",
-							"console.log(\"ownerId из коллекции:\", pm.collectionVariables.get(\"ownerId\"));\r",
 							"const ownerId = pm.collectionVariables.get(\"ownerId\");\r",
-							"pm.environment.set(\"ownerId\", ownerId); // Сохраняем ownerId в переменные окружения.\r",
+							"pm.environment.set(\"ownerId\", ownerId); \r",
 							"\r",
-							"// 3. Валидация ownerId.  Если ownerId не задан, устанавливаем значение по умолчанию (для тестов!).\r",
-							"//    В реальном коде так делать не стоит, лучше завершить выполнение теста с ошибкой.\r",
 							"let requestOwnerId = pm.environment.get(\"ownerId\");\r",
-							"console.log(\"ownerId из окружения:\", requestOwnerId);\r",
 							"if (!requestOwnerId) {\r",
-							"    console.warn(\"Внимание: ownerId не задан. Устанавливаем значение по умолчанию для тестов.\");\r",
-							"    requestOwnerId = \"1\"; // Замените на подходящий ID для ваших тестов.\r",
+							"    requestOwnerId = \"2\"; \r",
 							"    pm.environment.set(\"ownerId\", requestOwnerId);\r",
 							"}\r",
-							"\r",
-							"// 4. Формирование тела запроса (request body) в формате JSON.\r",
-							"//    Передаем ownerId в теле запроса.\r",
 							"const requestBody = {\r",
 							"    ownerId: requestOwnerId\r",
 							"};\r",
@@ -160,7 +291,6 @@
 							"    options: { raw: { language: 'json' } }\r",
 							"});\r",
 							"\r",
-							"// 5. Логирование тела запроса.  Полезно для отладки и проверки отправляемых данных.\r",
 							"console.log(\"Тело запроса:\", pm.request.body.raw);\r",
 							""
 						],
@@ -172,37 +302,27 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// Расширенные тесты для проверки логики отписки, основанные на предоставленном коде.\r",
-							"// Учитываем возможные статусы и сценарии.\r",
 							"\r",
-							"// 1. Проверяем успешный статус и формат.  Статус 200 предполагает успешную отписку.\r",
 							"pm.test(\"Успешный статус 200 и формат JSON\", function () {\r",
 							"    pm.response.to.have.status(200);\r",
 							"    pm.response.to.be.json;\r",
 							"});\r",
 							"\r",
-							"// 2. Проверяем структуру ответа. Убеждаемся, что ответ содержит ожидаемые поля.\r",
 							"pm.test(\"Проверка структуры ответа\", function () {\r",
 							"    const response = pm.response.json();\r",
 							"    pm.expect(response).to.have.all.keys(\"id\", \"followerId\", \"owner\",\"subscribeTime\", \"unsubscribeTime\",\"friendshipsStatus\");\r",
 							"});\r",
 							"\r",
-							"// 3. Проверяем, что friendshipsStatus корректно обновлен после отписки.\r",
 							"pm.test(\"Статус подписки после отписки корректен\", function () {\r",
 							"    const response = pm.response.json();\r",
-							"    // Учитываем возможные переходы статусов: из MUTUAL в NO_FRIENDSHIP, из ONE_SIDED в NO_FRIENDSHIP или ONE_SIDED остается.\r",
 							"    pm.expect(response.friendshipsStatus).to.be.oneOf([\"NO_FRIENDSHIP\", \"ONE_SIDED\"]);\r",
-							"\r",
-							"    // Дополнительная проверка: если была взаимная подписка, то статус должен стать NO_FRIENDSHIP.\r",
-							"    //  Нужна дополнительная информация о начальном статусе.\r",
 							"});\r",
 							"\r",
-							"// 4. Проверяем, что время отписки установлено в недавнее время.\r",
 							"pm.test(\"Время отписки недавнее\", function () {\r",
 							"    const response = pm.response.json();\r",
 							"    const unsubscribeTime = new Date(response.unsubscribeTime).getTime();\r",
 							"    const now = Date.now();\r",
-							"    pm.expect(now - unsubscribeTime).to.be.below(5000); // 5 секунд\r",
+							"    pm.expect(now - unsubscribeTime).to.be.below(5000);\r",
 							"});"
 						],
 						"type": "text/javascript",

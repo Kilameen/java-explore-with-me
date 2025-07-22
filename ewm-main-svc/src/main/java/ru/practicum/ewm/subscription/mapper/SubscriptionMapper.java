@@ -42,6 +42,7 @@ public class SubscriptionMapper {
                 .friendshipsStatus(subscription.getFriendshipsStatus())
                 .build();
     }
+
     public static SubscriberData toSubscriberData(Subscription subscription) {
         return SubscriberData.builder()
                 .userId(subscription.getFollower().getId())

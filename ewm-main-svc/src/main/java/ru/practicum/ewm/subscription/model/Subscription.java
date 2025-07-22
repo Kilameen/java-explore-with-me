@@ -35,7 +35,7 @@ public class Subscription {
     LocalDateTime unsubscribeTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "friendships_status",nullable = false)
+    @Column(name = "friendships_status", nullable = false)
     FriendshipsStatus friendshipsStatus;
 }
 
