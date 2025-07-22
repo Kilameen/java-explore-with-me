@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class SubscriberData {
     Long userId;
-    String OwnerName;
+    String ownerName;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime subscribeTime;
     FriendshipsStatus friendshipsStatus;
