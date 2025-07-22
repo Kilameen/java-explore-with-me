@@ -46,7 +46,7 @@ public class SubscriptionMapper {
     public static SubscriberData toSubscriberData(Subscription subscription) {
         return SubscriberData.builder()
                 .userId(subscription.getFollower().getId())
-                .OwnerName(subscription.getOwner().getName())
+                .ownerName(subscription.getOwner().getName())
                 .subscribeTime(subscription.getSubscribeTime())
                 .friendshipsStatus(subscription.getFriendshipsStatus())
                 .build();
