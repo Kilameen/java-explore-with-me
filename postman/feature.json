@@ -35,46 +35,10 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"const api = new API(pm);\r",
-							"const rnd = new RandomUtils();\r",
-							"\r",
-							"const main = async () => {\r",
-							"    try {\r",
-							"        const followerUser = await api.addUser(rnd.getUser());\r",
-							"        const ownerUser = await api.addUser(rnd.getUser());\r",
-							"\r",
-							"        const category = await api.addCategory(rnd.getCategory());\r",
-							"        const event = await api.addEvent(followerUser.id, rnd.getEvent(category.id));\r",
-							"\r",
-							"        m.environment.set(\"userId\", pm.collectionVariables.get(\"uid\"));\r",
-							"        m.environment.set(\"ownerId\", pm.collectionVariables.get(\"ownerId\"));\r",
-							"        \r",
-							"        let ownerId = pm.environment.get(\"ownerId\");\r",
-							"\r",
-							"        if (!ownerId) {\r",
-							"         console.warn(\"Внимание: ownerId не задан. Используем значение по умолчанию.\");\r",
-							"         ownerId = \"1\";\r",
-							"        pm.environment.set(\"ownerId\", ownerId);\r",
-							"}\r",
-							"        console.log(\"Созданы тестовые данные:\", { followerUser, ownerUser, category, event });\r",
-							"\r",
-							"    } catch (err) {\r",
-							"        console.error(\"Ошибка при подготовке тестовых данных\", err);\r",
-							"    }\r",
-							"\r",
-							"};\r",
-							"\r",
-							"const interval = setInterval(() => {}, 1000);\r",
-							"\r",
-							"setTimeout(async () => {\r",
-							"    try {\r",
-							"        await main();\r",
-							"    } catch (e) {\r",
-							"        console.error(e);\r",
-							"    } finally {\r",
-							"        clearInterval(interval);\r",
-							"    }\r",
-							"}, 100);"
+							"const userId = pm.environment.get(\"userId\");\r",
+							"pm.environment.set(\"userId\", \"1\");\r",
+							"const ownerId = pm.environment.get(\"userId\");\r",
+							"pm.environment.set(\"userId\", \"2\");"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -86,7 +50,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"ownerId\": 1}",
+					"raw": "{\"ownerId\": 2}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -94,13 +58,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseUrl}}/users/2/subscriptions",
+					"raw": "{{baseUrl}}/users/1/subscriptions",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"users",
-						"2",
+						"1",
 						"subscriptions"
 					]
 				}
@@ -141,17 +105,29 @@
 					}
 				}
 			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "{{baseUrl}}/users/2/subscriptions/events",
+					"raw": "{{baseUrl}}/users/1/subscriptions/events",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"users",
-						"2",
+						"1",
 						"subscriptions",
 						"events"
 					]
