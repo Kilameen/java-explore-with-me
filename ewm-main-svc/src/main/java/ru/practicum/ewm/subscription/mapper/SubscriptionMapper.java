@@ -17,7 +17,7 @@ public class SubscriptionMapper {
                 .follower(subscriber)
                 .owner(owner)
                 .subscribeTime(LocalDateTime.now())
-                .unsubscribeTime(LocalDateTime.MAX)
+                .unsubscribeTime(null)
                 .friendshipsStatus(FriendshipsStatus.NO_FRIENDSHIP)
                 .build();
     }

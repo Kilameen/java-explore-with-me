@@ -22,7 +22,6 @@ public class SubscriptionDto {
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime subscribeTime;
-    @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime unsubscribeTime;
     FriendshipsStatus friendshipsStatus;

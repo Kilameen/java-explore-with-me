@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     follower_id BIGINT NOT NULL,
     owner_id BIGINT NOT NULL,
     subscribe_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    unsubscribe_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    unsubscribe_time TIMESTAMP WITHOUT TIME ZONE,
     friendships_status VARCHAR(50) NOT NULL,
     FOREIGN KEY (follower_id) REFERENCES users(id),
     FOREIGN KEY (owner_id) REFERENCES users(id)
