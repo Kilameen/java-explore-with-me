@@ -31,13 +31,15 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             Pageable pageable
     );
 
-        List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
+    List<Event> findAllByInitiatorId(Long initiatorId, Pageable pageable);
 
-        List<Event> findAllByIdIn(List<Long> eventIds);
+    List<Event> findAllByIdIn(List<Long> eventIds);
 
-        boolean existsByCategoryId(Long id);
+    boolean existsByCategoryId(Long id);
 
-        Optional<Event> findByIdAndInitiatorId(Long eventId, Long userId);
+    Optional<Event> findByIdAndInitiatorId(Long eventId, Long userId);
 
-        Page<Event> findAll(Specification<Event> spec, Pageable pageable);
-    }
+    Page<Event> findAll(Specification<Event> spec, Pageable pageable);
+
+    List<Event> findByInitiatorIdIn(List<Long> initiatorIds, Pageable pageable);
+}

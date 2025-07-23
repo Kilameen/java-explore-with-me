@@ -21,4 +21,8 @@ public class User {
 
     @Column(unique = true, nullable = false, length = 254)
     String email;
+
+    @Column(name = "allow_subscriptions", nullable = false)
+    @Builder.Default
+    boolean allowSubscriptions = true;
 }
