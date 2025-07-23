@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryServiceImpl implements CategoryService {
 
@@ -33,6 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
     EventRepository eventRepository;
 
     @Override
+    @Transactional
     public CategoryDto create(NewCategoryDto newCategoryDto) {
         log.info("Попытка создать категорию с именем: {}", newCategoryDto.getName());
         if (categoryRepository.existsByName(newCategoryDto.getName())) {
@@ -45,6 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         if (eventRepository.existsByCategoryId(id)) {
             throw new ConflictException("Невозможно удалить категорию, так как с ней связаны события.");
@@ -53,6 +54,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryDto update(Long catId, UpdateCategoryDto updateCategoryDto) {
         log.info("Попытка обновить категорию с ID: {}", catId);
         Category category = categoryRepository.findById(catId)

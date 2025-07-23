@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CompilationServiceImpl implements CompilationService {
 
@@ -33,6 +32,7 @@ public class CompilationServiceImpl implements CompilationService {
     EventRepository eventRepository;
 
     @Override
+    @Transactional
     public CompilationDto create(NewCompilationDto newCompilationDto) {
         log.info("Добавление подборки: {}", newCompilationDto);
         Set<Long> eventIds = Optional.ofNullable(newCompilationDto.getEvents()).orElse(Collections.emptySet());
@@ -51,6 +51,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public CompilationDto update(Long compId, UpdateCompilationRequest updateCompilationRequest) {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Подборка c ID " + compId + " не найдена"));
@@ -75,6 +76,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         compilationRepository.deleteById(id);
         log.info("Подборка удалена");
