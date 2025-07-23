@@ -1,6 +1,5 @@
 package ru.practicum.ewm.subscription.service;
 
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.subscription.dto.NewRequestSubscription;
 import ru.practicum.ewm.subscription.dto.SubscriberData;
@@ -16,6 +15,6 @@ public interface SubscriptionService {
     List<EventShortDto> getEventsFromSubscriptions(Long userId, int from, int size);
 
     Long getSubscriberCount(Long userId);
-    
+
     List<SubscriberData> getAllSubscribers(Long userId, int from, int size);
 }
