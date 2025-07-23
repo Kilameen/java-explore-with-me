@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.enums.FriendshipsStatus;
@@ -41,71 +42,40 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public SubscriptionDto subscribe(Long userId, NewRequestSubscription requestSubscription) {
+        User follower = findUser(userId);
+        User owner = findUser(requestSubscription.getOwnerId());
 
-        User follower = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Подписчик c ID " + userId + " не найден"));
+        validateSubscription(follower, owner);
 
-        User owner = userRepository.findById(requestSubscription.getOwnerId())
-                .orElseThrow(() -> new NotFoundException("Пользователь c ID " + requestSubscription.getOwnerId() + " не найден"));
-
-        if (!follower.isAllowSubscriptions()) {
-            log.warn("Пользователь {} не разрешает подписки", userId);
-            throw new ConflictException("Пользователь не разрешает подписки");
-        }
-
-        if (follower.getId().equals(owner.getId())) {
-            log.warn("Пользователь {} не может подписаться на самого себя", userId);
-            throw new ConflictException("Пользователь не может подписаться на самого себя");
-        }
-
-        Optional<Subscription> existingSubscription = subscriptionRepository.findByFollowerAndOwner(follower, owner);
-
-        if (existingSubscription.isPresent()) {
-            Subscription sub = existingSubscription.get();
-            if (sub.getFriendshipsStatus() == FriendshipsStatus.ONE_SIDED || sub.getFriendshipsStatus() == FriendshipsStatus.MUTUAL) {
-                log.warn("У пользователя {} уже есть подписка на пользователя {}", userId, requestSubscription.getOwnerId());
-                throw new ConflictException("У пользователя уже есть подписка на пользователя");
-            }
-        }
-        Subscription subscription = SubscriptionMapper.toNewSubscriptionFromRequest(follower, requestSubscription, owner);
-
-        Optional<Subscription> existingReverseSubscription = subscriptionRepository
-                .findByFollowerAndOwner(owner, follower);
-        if (existingReverseSubscription.isPresent()) {
-            subscription.setFriendshipsStatus(FriendshipsStatus.MUTUAL);
-            subscription.setSubscribeTime(LocalDateTime.now());
-
-            existingReverseSubscription.get().setFriendshipsStatus(FriendshipsStatus.MUTUAL);
-            existingReverseSubscription.get().setSubscribeTime(LocalDateTime.now());
-            subscriptionRepository.saveAll(List.of(subscription, existingReverseSubscription.get()));
-        } else {
-
-            subscription.setFriendshipsStatus(FriendshipsStatus.ONE_SIDED);
-            subscription.setSubscribeTime(LocalDateTime.now());
-            subscriptionRepository.save(subscription);
-        }
+        Subscription subscription = createOrUpdateSubscription(follower, owner, requestSubscription);
         log.info("Подписка успешно создана для пользователя {} на пользователя {}. Статус дружбы: {}",
                 userId, requestSubscription.getOwnerId(), subscription.getFriendshipsStatus());
         return SubscriptionMapper.toSubscriptionDtoWithoutUnsubscribeTime(subscription);
     }
 
     @Override
-    public SubscriptionDto unSubscribe(Long userId, NewRequestSubscription requestUnSubscription) {
+    public void unsubscribe(Long userId, Long ownerId) {
+        User follower = findUser(userId);
+        User owner = findUser(ownerId);
+        log.info("Обработка запроса на отмену подписки от пользователя {} к пользователю {}", userId, ownerId);
 
-
-        User follower = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Подписчик c ID " + userId + " не найден"));
-
-        User owner = userRepository.findById(requestUnSubscription.getOwnerId())
-                .orElseThrow(() -> new NotFoundException("Пользователь c ID " + requestUnSubscription.getOwnerId() + " не найден"));
-
-        Subscription subscription = subscriptionRepository.findByFollowerAndOwner(follower, owner)
-                .orElseGet(() -> subscriptionRepository.findByFollowerAndOwner(owner, follower)
-                        .orElseThrow(() -> new NotFoundException("Подписка между пользователями " + userId + " и " + requestUnSubscription.getOwnerId() + " не найдена")));
-
-        boolean isOwnerInitiated = subscription.getOwner().equals(follower);
-
-        return unsubscribeFollowerOrOwner(follower, owner, subscription, isOwnerInitiated);
+        Optional<Subscription> subscription = subscriptionRepository
+                .findByFollowerAndOwner(follower, owner);
+        if (subscription.isEmpty()) {
+            log.warn("У пользователя {} нет подписки на пользователя {}", userId, ownerId);
+            throw new ConflictException("У пользователя нет подписки на пользователя");
+        }
+        Optional<Subscription> reverseSubscription = subscriptionRepository
+                .findByFollowerAndOwner(owner, follower);
+        if (reverseSubscription.isPresent() &&
+                reverseSubscription.get().getFriendshipsStatus().equals(FriendshipsStatus.MUTUAL)) {
+            reverseSubscription.get().setFriendshipsStatus(FriendshipsStatus.ONE_SIDED);
+            reverseSubscription.get().setUnsubscribeTime(LocalDateTime.now());
+            subscriptionRepository.save(reverseSubscription.get());
+        }
+        subscriptionRepository.delete(subscription.get());
+        log.info("Пользователь {} успешно отписался от {}. Статус дружбы обновлен: {}",
+                userId, ownerId, reverseSubscription.map(Subscription::getFriendshipsStatus).orElse(null));
     }
 
     @Override
@@ -120,7 +90,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .map(subscription -> subscription.getOwner().getId())
                 .collect(Collectors.toList());
 
-        PageRequest pageRequest = PageRequest.of(from / size, size);
+        PageRequest pageRequest = PageRequest.of(from / size, size, Sort.by("eventDate").descending());
         List<Event> events = eventRepository.findByInitiatorIdIn(ownerIds, pageRequest);
 
         return events.stream()
@@ -154,32 +124,48 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .collect(Collectors.toList());
     }
 
-    private SubscriptionDto unsubscribeFollowerOrOwner(User follower, User owner, Subscription subscription, boolean isOwnerInitiated) {
+    private User findUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь c ID " + userId + " не найден"));
+    }
 
-        User actualFollower = isOwnerInitiated ? owner : follower;
-        User actualOwner = isOwnerInitiated ? follower : owner;
-
-        Subscription reverseSubscription = subscriptionRepository.findByFollowerAndOwner(actualOwner, actualFollower).orElse(null);
-
-        if (subscription.getFriendshipsStatus() == FriendshipsStatus.MUTUAL) {
-            subscription.setFriendshipsStatus(FriendshipsStatus.NO_FRIENDSHIP);
-
-            if (reverseSubscription != null) {
-                reverseSubscription.setFriendshipsStatus(FriendshipsStatus.NO_FRIENDSHIP);
-                subscriptionRepository.save(reverseSubscription);
-            }
-        } else if (subscription.getFriendshipsStatus() == FriendshipsStatus.ONE_SIDED && reverseSubscription != null && reverseSubscription.getFriendshipsStatus() == FriendshipsStatus.NO_FRIENDSHIP) {
-
-            subscription.setFriendshipsStatus(FriendshipsStatus.NO_FRIENDSHIP);
-            reverseSubscription.setFriendshipsStatus(FriendshipsStatus.NO_FRIENDSHIP);
-            subscriptionRepository.save(reverseSubscription);
+    private void validateSubscription(User follower, User owner) {
+        if (!follower.isAllowSubscriptions()) {
+            log.warn("Пользователь {} не разрешает подписки", follower.getId());
+            throw new ConflictException("Пользователь не разрешает подписки");
         }
 
-        subscription.setUnsubscribeTime(LocalDateTime.now());
-        subscriptionRepository.save(subscription);
+        if (follower.getId().equals(owner.getId())) {
+            log.warn("Пользователь {} не может подписаться на самого себя", follower.getId());
+            throw new ConflictException("Пользователь не может подписаться на самого себя");
+        }
 
-        log.info("Пользователь {} {} пользователя {} в {}. Статус: {}", actualFollower.getId(), isOwnerInitiated ? "удалил из подписчиков" : "отписался от", actualOwner.getId(), subscription.getUnsubscribeTime(), subscription.getFriendshipsStatus());
+        Optional<Subscription> existingSubscription = subscriptionRepository.findByFollowerAndOwner(follower, owner);
+        if (existingSubscription.isPresent()) {
+            Subscription sub = existingSubscription.get();
+            if (sub.getFriendshipsStatus() == FriendshipsStatus.ONE_SIDED || sub.getFriendshipsStatus() == FriendshipsStatus.MUTUAL) {
+                log.warn("У пользователя {} уже есть подписка на пользователя {}", follower.getId(), owner.getId());
+                throw new ConflictException("У пользователя уже есть подписка на пользователя");
+            }
+        }
+    }
 
-        return SubscriptionMapper.toSubscriptionDto(subscription);
+    private Subscription createOrUpdateSubscription(User follower, User owner, NewRequestSubscription requestSubscription) {
+        Subscription subscription = SubscriptionMapper.toNewSubscriptionFromRequest(follower, requestSubscription, owner);
+        Optional<Subscription> existingReverseSubscription = subscriptionRepository.findByFollowerAndOwner(owner, follower);
+
+        if (existingReverseSubscription.isPresent()) {
+            subscription.setFriendshipsStatus(FriendshipsStatus.MUTUAL);
+            subscription.setSubscribeTime(LocalDateTime.now());
+
+            existingReverseSubscription.get().setFriendshipsStatus(FriendshipsStatus.MUTUAL);
+            existingReverseSubscription.get().setSubscribeTime(LocalDateTime.now());
+            subscriptionRepository.saveAll(List.of(subscription, existingReverseSubscription.get()));
+        } else {
+            subscription.setFriendshipsStatus(FriendshipsStatus.ONE_SIDED);
+            subscription.setSubscribeTime(LocalDateTime.now());
+            subscriptionRepository.save(subscription);
+        }
+        return subscription;
     }
 }

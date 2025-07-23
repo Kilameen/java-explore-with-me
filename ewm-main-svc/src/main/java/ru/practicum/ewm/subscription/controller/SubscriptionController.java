@@ -37,11 +37,11 @@ public class SubscriptionController {
         return subscriptionService.subscribe(userId, requestSubscription);
     }
 
-    @PatchMapping
-    public SubscriptionDto unsubscribe(@PathVariable Long userId,
-                                       @Valid @RequestBody NewRequestSubscription requestUnSubscription) {
-        log.info("Получен PATCH запрос на отписку пользователя {} от пользователя {}", userId, requestUnSubscription.getOwnerId());
-        return subscriptionService.unSubscribe(userId, requestUnSubscription);
+    @DeleteMapping("/{ownerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unsubscribe(@PathVariable Long userId, @PathVariable Long ownerId) {
+        log.info("Получен DELETE запрос на отписку пользователя {} от пользователя {}", userId, ownerId);
+        subscriptionService.unsubscribe(userId, ownerId);
     }
 
     @GetMapping("/events")

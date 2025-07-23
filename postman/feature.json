@@ -359,29 +359,18 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"\r",
 							"const userId = pm.collectionVariables.get(\"userId\");\r",
-							"pm.environment.set(\"userId\", userId); \r",
+							"pm.environment.set(\"userId\", userId);\r",
 							"\r",
 							"const ownerId = pm.collectionVariables.get(\"ownerId\");\r",
-							"pm.environment.set(\"ownerId\", ownerId); \r",
+							"pm.environment.set(\"ownerId\", ownerId);\r",
 							"\r",
 							"let requestOwnerId = pm.environment.get(\"ownerId\");\r",
 							"if (!requestOwnerId) {\r",
-							"    requestOwnerId = \"2\"; \r",
+							"    requestOwnerId = \"2\";\r",
 							"    pm.environment.set(\"ownerId\", requestOwnerId);\r",
 							"}\r",
-							"const requestBody = {\r",
-							"    ownerId: requestOwnerId\r",
-							"};\r",
-							"\r",
-							"pm.request.body.update({\r",
-							"    mode: 'raw',\r",
-							"    raw: JSON.stringify(requestBody),\r",
-							"    options: { raw: { language: 'json' } }\r",
-							"});\r",
-							"\r",
-							"console.log(\"Тело запроса:\", pm.request.body.raw);\r",
+							"console.log(`Удаление подписки пользователя ${userId} от пользователя ${ownerId}`);\r",
 							""
 						],
 						"type": "text/javascript",
@@ -392,27 +381,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"\r",
-							"pm.test(\"Успешный статус 200 и формат JSON\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"    pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Проверка структуры ответа\", function () {\r",
-							"    const response = pm.response.json();\r",
-							"    pm.expect(response).to.have.all.keys(\"id\", \"followerId\", \"owner\",\"subscribeTime\", \"unsubscribeTime\",\"friendshipsStatus\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Статус подписки после отписки корректен\", function () {\r",
-							"    const response = pm.response.json();\r",
-							"    pm.expect(response.friendshipsStatus).to.be.oneOf([\"NO_FRIENDSHIP\", \"ONE_SIDED\"]);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Время отписки недавнее\", function () {\r",
-							"    const response = pm.response.json();\r",
-							"    const unsubscribeTime = new Date(response.unsubscribeTime).getTime();\r",
-							"    const now = Date.now();\r",
-							"    pm.expect(now - unsubscribeTime).to.be.below(12000000);\r",
+							"pm.test(\"Успешный статус 204 No Content\", function () {\r",
+							"    pm.response.to.have.status(204);\r",
 							"});"
 						],
 						"type": "text/javascript",
@@ -421,7 +391,7 @@
 				}
 			],
 			"request": {
-				"method": "PATCH",
+				"method": "DELETE",
 				"header": [],
 				"body": {
 					"mode": "raw",
@@ -433,14 +403,15 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseUrl}}/users/{{userId}}/subscriptions",
+					"raw": "{{baseUrl}}/users/{{userId}}/subscriptions/{{ownerId}}",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"users",
 						"{{userId}}",
-						"subscriptions"
+						"subscriptions",
+						"{{ownerId}}"
 					]
 				}
 			},
