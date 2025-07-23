@@ -44,7 +44,6 @@ import jakarta.persistence.criteria.Predicate;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EventServiceImpl implements EventService {
 
@@ -62,6 +61,7 @@ public class EventServiceImpl implements EventService {
     ObjectMapper mapper;
 
     @Override
+    @Transactional
     public EventFullDto create(Long userId, NewEventDto newEventDto) {
         validateEventDate(newEventDto.getEventDate());
         LocalDateTime createdOn = LocalDateTime.now();
@@ -85,6 +85,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEventByAdmin(Long eventId, UpdateEventAdminRequest adminRequest) {
         Event event = getEventById(eventId);
 
@@ -104,6 +105,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEventByPrivate(Long userId, Long eventId, UpdateEventUserRequest eventUserRequest) {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
@@ -141,6 +143,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public Collection<EventShortDto> findAllByPublic(EventSearchParams params, HttpServletRequest request) {
 
         if (params.getRangeStart() != null && params.getRangeEnd() != null && params.getRangeStart().isAfter(params.getRangeEnd())) {
@@ -211,6 +214,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public Collection<EventShortDto> findAllByPrivate(Long userId, Integer from, Integer size, HttpServletRequest request) {
 
         User user = getUserById(userId);
@@ -235,6 +239,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public Collection<EventFullDto> findAllByAdmin(EventSearchParams params, HttpServletRequest request) {
 
         Pageable pageable = PageRequest.of(params.getFrom(), params.getSize());
@@ -260,18 +265,8 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
-    private Map<Long, Long> getConfirmedRequestsForEvents(List<Long> eventIds) {
-        List<Object[]> results = eventRequestRepository.countByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
-        Map<Long, Long> confirmedRequestsMap = new HashMap<>();
-        for (Object[] result : results) {
-            Long eventId = (Long) result[0];
-            Long count = (Long) result[1];
-            confirmedRequestsMap.put(eventId, count);
-        }
-        return confirmedRequestsMap;
-    }
-
     @Override
+    @Transactional
     public EventFullDto findEventById(Long eventId, HttpServletRequest request) {
         Event event = getEventById(eventId);
 
@@ -285,6 +280,17 @@ public class EventServiceImpl implements EventService {
         eventFullDto.setViews(getViews(eventId, event.getCreatedOn(), request));
         eventFullDto.setConfirmedRequests(eventRequestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED));
         return eventFullDto;
+    }
+
+    private Map<Long, Long> getConfirmedRequestsForEvents(List<Long> eventIds) {
+        List<Object[]> results = eventRequestRepository.countByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
+        Map<Long, Long> confirmedRequestsMap = new HashMap<>();
+        for (Object[] result : results) {
+            Long eventId = (Long) result[0];
+            Long count = (Long) result[1];
+            confirmedRequestsMap.put(eventId, count);
+        }
+        return confirmedRequestsMap;
     }
 
     private void validateEventDate(LocalDateTime eventDate) {

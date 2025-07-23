@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SubscriptionServiceImpl implements SubscriptionService {
     UserRepository userRepository;
@@ -41,6 +40,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     EventRepository eventRepository;
 
     @Override
+    @Transactional
     public SubscriptionDto subscribe(Long userId, NewRequestSubscription requestSubscription) {
         User follower = findUser(userId);
         User owner = findUser(requestSubscription.getOwnerId());
@@ -54,6 +54,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Transactional
     public void unsubscribe(Long userId, Long ownerId) {
         User follower = findUser(userId);
         User owner = findUser(ownerId);
